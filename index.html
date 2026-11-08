@@ -445,7 +445,7 @@ const ST=()=>STAGES[G.si], LV=()=>ST().levels[G.lvl];
 
 /* =================== AUDIO =================== */
 let AC=null;
-function ac(){ if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}} if(AC&&AC.state==='suspended')AC.resume(); return AC;}
+function ac(){ try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){} if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}} if(AC&&AC.state==='suspended')AC.resume(); return AC;}
 function tone(f,d,type='sine',v=.18,when=0,slide=0){ if(G.muted)return; const a=ac(); if(!a)return; const t=a.currentTime+when;
   const o=a.createOscillator(),g=a.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);
   g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g).connect(a.destination); o.start(t); o.stop(t+d+.02);}
@@ -461,6 +461,8 @@ const SFX={
   click(){tone(500,.06,'square',.06)}
 };
 function music(on){ if(on&&!G.muted){const p=BGM.play();if(p&&p.catch)p.catch(()=>{})} else BGM.pause(); }
+// iPhone/iPad: if the music was blocked, start it again on the next tap anywhere
+document.addEventListener('pointerdown',()=>{ try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){} if(G.musicStarted&&!G.muted&&BGM.paused){ if(BGM.readyState===0)BGM.load(); music(true) } },true);
 
 /* =================== CANVAS =================== */
 const cv=$('#cv'),cx=cv.getContext('2d'); let W=0,H=0,DPR=1;
