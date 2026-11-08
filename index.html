@@ -227,7 +227,7 @@
 const $=s=>document.querySelector(s);
 const IMG={};
 function loadImg(k,src){return new Promise(r=>{const i=new Image();i.onload=()=>{IMG[k]=i;r()};i.onerror=r;i.src=src;})}
-const SRC={girl:'game-assets/girl.webp',boy:'game-assets/boy.webp',fareej:'game-assets/fareej.webp',house:'game-assets/house.webp',hosh:'game-assets/hosh.webp',nagaa:'game-assets/nagaa.webp',tray:'game-assets/tray.webp',deep:'game-assets/deep.webp',diver:'game-assets/diver.webp',dayyin:'game-assets/dayyin.webp',midsea:'game-assets/midsea.webp',heartcap:'game-assets/heartcap.webp',final:'game-assets/title.webp',oysclosed:'game-assets/oysc.webp',oysopen:'game-assets/oyso.webp',dana:'game-assets/dana.webp',chest:'game-assets/chest.webp',slate:'game-assets/slate.webp'};
+const SRC={girl:'game-assets/girl.webp',boy:'game-assets/boy.webp',fareej:'game-assets/fareej.webp',house:'game-assets/house.webp',hosh:'game-assets/hosh.webp',nagaa:'game-assets/nagaa.webp',tray:'game-assets/tray.webp',deep:'game-assets/deep.webp',diver:'game-assets/diver.webp',dayyin:'game-assets/dayyin.webp',midsea:'game-assets/midsea.webp',heartcap:'game-assets/heartcap.webp',realheart:'game-assets/realheart.webp',final:'game-assets/title.webp',oysclosed:'game-assets/oysc.webp',oysopen:'game-assets/oyso.webp',dana:'game-assets/dana.webp',chest:'game-assets/chest.webp',slate:'game-assets/slate.webp'};
 Object.entries(SRC).forEach(([k,v])=>loadImg(k,v));
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -413,8 +413,6 @@ const STAGES=[
    levels:[
     {type:'race', title:'سباق التجديف 🚣', sub:'اضغط «جدّف» بسرعة وراقب نبضات قلبك وتنفّسك', need:3,
      intro:'سباق إلى المحارة! 🚣 اضغط زر <b>«جدّف»</b> بسرعة لتسبق سفينة الجيران. راقب <b>عدّاد نبضات القلب</b> 💓 و<b>عدّاد التنفس</b> 😮‍💨 وأنت تجدّف… وأجب عند كل عوّامة 🛟!'},
-    {type:'respond', title:'ماذا يحدث لجسمي؟ 🌡️', sub:'اختر كل الاستجابات الصحيحة ثم اضغط تأكيد', need:4,
-     intro:'جسم الإنسان <b>يستجيب</b> للعوامل المختلفة: الحرارة، والبرد، والخوف، والرياضة! سأعرض لك موقفًا، واختر <b>كل</b> استجابات جسمك الصحيحة: 💦 العرق، 🥶 الرعشة، 💓 تسارع نبضات القلب، 😮‍💨 تسارع التنفس.'},
     {type:'boss', title:'المحارة العملاقة 🦪👑', sub:'كل إجابة صحيحة تكسر قفلًا', need:5,
      intro:'وصلنا! 🦪 هذه <b>المحارة العملاقة</b> مقفلة بـ<b>٥ أقفال</b>. كل عبارة <b>صحيحة أو خطأ</b> عن <b>استجابة الجسم</b> تكسر قفلًا… اكسرها كلها لتحصل على <b>الدانة</b>! 👑'}],
    quizIntro:n=>`✨ <b>مبروك يا ${n}!</b> حصلت على <b>الدانة</b>! 👑 قبل أن نعود إلى الكويت، أجب عن <b>سؤالَيَّ الأخيرين</b>. كل إجابة صحيحة تساوي <b>3 لآلئ</b>!`,
@@ -611,7 +609,7 @@ function drawSort(){
 
 /* =================== MODE: RUNNER (stage 3) =================== */
 function laneX(i){return W*(.2+.3*i)}
-function runnerY(){return Math.max(170,H*.34)}
+function runnerY(){return Math.max(W<520?250:215,H*.4)}
 function makeGates(want){const others=shuffle(ORDER.filter(k=>k!==want)).slice(0,2);return shuffle([{k:want},{k:others[0]},{k:others[1]}])}
 function pendingRows(){return G.rows.filter(r=>!r.pearl&&!r.done).sort((a,b)=>a.y-b.y)}
 function spawnRow(){
@@ -628,7 +626,7 @@ function updateRunner(dt){
   const L=LV(); const v=(H*.13+28)*L.speed*(1+Math.min(G.got,10)*.03);
   for(const r of G.rows)r.y-=v*dt;
   const last=G.rows.filter(r=>!r.pearl).slice(-1)[0];
-  if(!last||last.y<H-Math.max(250,H*.45))spawnRow();
+  if(!pendingRows().length&&(!last||last.y<runnerY()-30))spawnRow();
   const py=runnerY();
   for(const r of G.rows){ if(r.done)continue;
     if(r.pearl){ if(r.y<=py+10){r.done=true; if(r.lane===G.lane){G.pearls++;SFX.pearl();floatTxt('+1 🦪',laneX(r.lane),py,'#fff',24);updHud()}} continue }
@@ -662,7 +660,7 @@ function drawRunner(){
   for(const r of G.rows){
     if(r.pearl){ if(r.done)continue; const x=laneX(r.lane);cx.save();const g=cx.createRadialGradient(x-5,r.y-5,2,x,r.y,16);g.addColorStop(0,'#fff');g.addColorStop(1,'#e8d7a8');cx.fillStyle=g;cx.shadowColor='#ffd166';cx.shadowBlur=14;cx.beginPath();cx.arc(x,r.y,14,0,7);cx.fill();cx.restore();continue}
     r.gates.forEach((g,i)=>{const x=laneX(i);cx.save();
-      cx.globalAlpha=r.done?Math.max(0,1-(runnerY()-r.y)/120):1;
+      if(r.done)return; cx.globalAlpha=1;
       rr(x-gw/2,r.y-gh/2,gw,gh,14);cx.fillStyle='#8a5a2b';cx.fill();
       rr(x-gw/2+5,r.y-gh/2+5,gw-10,gh-10,10);cx.fillStyle='#fff8ec';cx.fill();
       cx.fillStyle='#3b2412';cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';
@@ -905,8 +903,9 @@ function drawVoyage(){
     const lx=s.side>0? s.x+R+6+tw/2 : s.x-R-6-tw/2; rr(lx-tw/2,s.y-13,tw,26,9);cx.fillStyle='rgba(255,255,255,.95)';cx.fill();cx.strokeStyle='#8a5a2b';cx.lineWidth=2;cx.stroke();
     cx.fillStyle='#3b2412';cx.fillText(s.n,lx,s.y+1);cx.restore()});
   // heart
-  const beat=1+.08*Math.max(0,Math.sin(G.t*7)); cx.save();cx.translate(g.heart.x,g.heart.y);cx.scale(beat,beat);cx.font=`${Math.min(56,W*.13)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText('❤️',0,0);cx.restore();
-  cx.save();cx.font=`900 ${Math.min(16,W*.038)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';const hl='القلب ❤️ الميناء';const hw=cx.measureText(hl).width+16;const hy=g.heart.y+Math.min(56,W*.13)*.62+14;
+  const beat=1+.08*Math.max(0,Math.sin(G.t*7)); cx.save();cx.translate(g.heart.x,g.heart.y);cx.scale(beat,beat);
+  if(IMG.realheart){const hs=Math.min(84,W*.19);cx.drawImage(IMG.realheart,-hs/2,-hs/2,hs,hs*IMG.realheart.height/IMG.realheart.width)} else {cx.font=`${Math.min(56,W*.13)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText('❤️',0,0)} cx.restore();
+  cx.save();cx.font=`900 ${Math.min(16,W*.038)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';const hl='القلب (الميناء)';const hw=cx.measureText(hl).width+16;const hy=g.heart.y+Math.min(56,W*.13)*.62+14;
   rr(g.heart.x-hw/2,hy-13,hw,26,9);cx.fillStyle='rgba(255,255,255,.95)';cx.fill();cx.strokeStyle='#b71c1c';cx.lineWidth=2;cx.stroke();cx.fillStyle='#b71c1c';cx.fillText(hl,g.heart.x,hy+1);cx.restore();
   const sp=shipPos(); drawShip(sp.x,sp.y,G.vs.cargo);
   cx.restore();
