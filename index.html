@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>رحلة الدانة — لعبة العلوم</title>
+<style>
+  :root{--sand:#f3e2c0;--mud:#c8955a;--mud-d:#8a5a2b;--sea:#1f8a9e;--sea-d:#0f5566;--gold:#f2b632;--ink:#3b2412;--cream:#fff8ec;--ok:#3f9b4f;--bad:#d4543c}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#123;font-family:"Tajawal","Noto Kufi Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;color:var(--ink)}
+  #app{position:fixed;inset:0;overflow:hidden}
+  canvas#cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+  .screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;padding:16px;text-align:center;z-index:5}
+  .screen.on{display:flex}
+  #sEnd,#sMap{justify-content:flex-start;overflow-y:auto}
+  #sEnd>.cert{margin-top:auto}
+  #sEnd>.hint-small{margin-bottom:auto;padding-bottom:12px}
+  .bgimg{position:fixed;inset:0;background-size:cover;background-position:center;z-index:-1}
+  .bgimg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35))}
+  h1.title{font-size:clamp(44px,11vw,96px);margin:0;color:#fff;text-shadow:0 4px 0 var(--mud-d),0 8px 24px rgba(0,0,0,.45);letter-spacing:1px}
+  .subtitle{max-width:88vw;color:#fff;font-size:clamp(15px,3.9vw,26px);line-height:1.6;margin:6px 0 22px;text-shadow:0 2px 8px rgba(0,0,0,.6);font-weight:700}
+  .btn{appearance:none;border:0;border-radius:18px;padding:14px 34px;font:inherit;font-weight:800;font-size:clamp(19px,5vw,26px);cursor:pointer;background:linear-gradient(180deg,#ffd166,#f2a91f);color:#4a2a05;box-shadow:0 6px 0 #b97a0c,0 10px 20px rgba(0,0,0,.25);transition:transform .08s}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b97a0c}
+  .btn.sea{background:linear-gradient(180deg,#38b6c9,#1f8a9e);color:#fff;box-shadow:0 6px 0 #0f5566,0 10px 20px rgba(0,0,0,.25)}
+  .btn.small{font-size:clamp(15px,4vw,19px);padding:9px 18px;border-radius:14px}
+  .btn[disabled]{filter:grayscale(.7);opacity:.6}
+  .linkbtn{background:none;border:0;color:#fff;font:inherit;font-size:14px;text-decoration:underline;opacity:.85;cursor:pointer;margin-top:10px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  .card{background:var(--cream);border-radius:24px;padding:20px 18px;box-shadow:0 12px 40px rgba(0,0,0,.35);max-width:560px;width:100%;border:4px solid var(--mud)}
+  .chars{display:flex;gap:14px;justify-content:center;margin:12px 0}
+  .char{flex:1;max-width:200px;background:#fff;border:4px solid transparent;border-radius:20px;padding:8px;cursor:pointer;transition:.15s;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  .char img{width:100%;height:clamp(150px,30vh,260px);object-fit:contain}
+  .char b{display:block;font-size:20px;margin-top:4px}
+  .char.sel{border-color:var(--gold);transform:translateY(-4px) scale(1.03);box-shadow:0 10px 24px rgba(242,182,50,.5)}
+  input.name{font:inherit;font-size:22px;padding:10px 14px;border-radius:14px;border:3px solid var(--mud);width:100%;max-width:320px;text-align:center;margin:6px 0 14px;background:#fff}
+  .story{display:flex;gap:12px;align-items:flex-end;max-width:640px;width:100%}
+  .story img{width:clamp(90px,24vw,150px);flex:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+  .bubble{background:var(--cream);border-radius:22px;padding:16px 18px;font-size:clamp(17px,4.4vw,22px);line-height:1.7;text-align:right;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.35);border:3px solid var(--mud)}
+  .bubble b{color:var(--sea-d)}
+  .bubble .who{font-weight:800;color:var(--mud-d);font-size:.85em;display:block;margin-bottom:4px}
+  #hud{position:absolute;top:0;left:0;right:0;z-index:4;display:none;padding:8px 10px;pointer-events:none}
+  #hud.on{display:block}
+  .hrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-left:52px}
+  .pill{background:rgba(255,248,236,.92);border-radius:999px;padding:5px 12px;font-weight:800;font-size:clamp(15px,3.8vw,20px);box-shadow:0 3px 8px rgba(0,0,0,.2);display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .task{margin:8px auto 0;background:linear-gradient(180deg,#2aa3b8,#167a8c);color:#fff;border-radius:16px;padding:8px 14px;font-weight:800;font-size:clamp(16px,4.3vw,23px);max-width:680px;text-align:center;box-shadow:0 4px 0 #0f5566,0 8px 18px rgba(0,0,0,.25);line-height:1.45}
+  .task small{display:block;font-weight:600;font-size:.72em;opacity:.95}
+  .chain{display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+  .chain span{background:rgba(255,255,255,.22);border-radius:10px;padding:2px 8px;font-size:.78em}
+  .chain span.done{background:#ffd166;color:#4a2a05}
+  .chain span.next{outline:3px solid #ffd166}
+  .prog{height:12px;background:rgba(0,0,0,.25);border-radius:99px;margin:8px auto 0;max-width:680px;overflow:hidden}
+  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#f2a91f);border-radius:99px;transition:width .3s}
+  #pauseBtn{pointer-events:auto;cursor:pointer;border:0;padding:0;box-shadow:none;background:none;font-size:inherit}
+  #muteBtn{position:absolute;top:8px;left:10px;z-index:30;width:44px;height:44px;border-radius:50%;border:0;cursor:pointer;font-size:22px;background:rgba(255,248,236,.92);box-shadow:0 3px 8px rgba(0,0,0,.25)}
+  #muteBtn.off{opacity:.6}
+  #modal{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(10,20,30,.55);padding:16px;overflow-y:auto}
+  #modal.on{display:flex}
+  #modal .story{animation:pop .25s ease-out;margin:auto}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+  .opts{display:grid;gap:10px;margin-top:12px}
+  .opt{font:inherit;font-size:clamp(17px,4.4vw,21px);font-weight:700;text-align:right;padding:12px 14px;border-radius:14px;border:3px solid #e6cfa5;background:#fff;cursor:pointer;color:var(--ink)}
+  .opt.right{background:#dff5e1;border-color:var(--ok)}
+  .opt.wrong{background:#fde3dc;border-color:var(--bad)}
+  .stars{font-size:clamp(34px,9vw,52px);letter-spacing:6px;margin:6px 0}
+  .stars .off{filter:grayscale(1);opacity:.35}
+  .cert{background:#fffaf0;border:10px double var(--mud);border-radius:18px;padding:18px 16px;max-width:620px;width:100%;box-shadow:0 14px 50px rgba(0,0,0,.45)}
+  .cert h2{margin:0;color:var(--mud-d);font-size:clamp(26px,7vw,40px)}
+  .cert .nm{font-size:clamp(28px,8vw,46px);font-weight:900;color:var(--sea-d);margin:6px 0;border-bottom:3px dashed var(--mud);display:inline-block;padding:0 16px}
+  .cert p{font-size:clamp(16px,4.2vw,21px);line-height:1.7;margin:6px 0}
+  .cert .row{display:flex;gap:10px;align-items:center;justify-content:center}
+  .cert img.house{width:clamp(100px,26vw,170px)}
+  .cert img.av{height:clamp(110px,22vh,170px)}
+  .btnrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .ctrl{position:absolute;bottom:10px;left:0;right:0;display:none;justify-content:space-between;padding:0 10px;z-index:4;pointer-events:none;gap:10px}
+  .ctrl.on{display:flex}
+  #ctrl button{pointer-events:auto;width:64px;height:64px;border-radius:50%;border:0;font-size:30px;background:rgba(255,248,236,.85);box-shadow:0 4px 10px rgba(0,0,0,.3);color:var(--mud-d);font-weight:900}
+  #sortCtrl button{pointer-events:auto;flex:0 1 46%;max-width:240px;height:58px;border-radius:18px;border:0;font:inherit;font-size:clamp(17px,4.6vw,22px);font-weight:900;box-shadow:0 5px 0 rgba(0,0,0,.25),0 8px 16px rgba(0,0,0,.25);cursor:pointer}
+  #sortCtrl .inh{background:linear-gradient(180deg,#ffd166,#f2a91f);color:#4a2a05}
+  #sortCtrl .acq{background:linear-gradient(180deg,#38b6c9,#1f8a9e);color:#fff}
+  .hint-small{color:#fff;font-size:15px;margin-top:10px;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+  /* family puzzle */
+  #fam{position:absolute;left:0;right:0;bottom:0;top:0;z-index:3;display:none;align-items:center;justify-content:center;padding:150px 10px 10px}
+  #fam.on{display:flex}
+  .famBox{background:rgba(255,248,236,.95);border:4px solid var(--mud);border-radius:22px;padding:12px;max-width:640px;width:100%;box-shadow:0 12px 34px rgba(0,0,0,.35);max-height:100%;overflow-y:auto}
+  .parents{display:flex;gap:10px;justify-content:center;align-items:flex-start}
+  .par{flex:1;max-width:220px;background:#fff;border-radius:16px;padding:6px;border:3px solid #e6cfa5}
+  .par img{width:clamp(70px,20vw,110px);height:auto}
+  .par b{display:block;font-size:clamp(15px,4vw,18px)}
+  .chip{display:inline-block;background:#f3e2c0;border-radius:8px;padding:1px 6px;margin:2px;font-size:clamp(11px,3vw,13px);font-weight:700}
+  .heart{font-size:28px;align-self:center}
+  .kids{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+  @media (max-width:520px){.kids{grid-template-columns:repeat(2,1fr)}.kid img{max-width:100px}.par img{width:64px}.famBox{padding:8px}#fam{padding-top:140px}}
+  @media (max-height:700px){.kid img{max-width:72px}.par img{width:56px}}
+  .kid{background:#fff;border:3px solid #e6cfa5;border-radius:16px;padding:4px;cursor:pointer;transition:.12s}
+  .kid img{width:100%;max-width:110px;height:auto}
+  .kid:active{transform:scale(.96)}
+  .kid.right{border-color:var(--ok);background:#dff5e1}
+  .kid.wrong{border-color:var(--bad);background:#fde3dc}
+  .timer{height:10px;background:#e6cfa5;border-radius:99px;overflow:hidden;margin-top:8px}
+  .timer i{display:block;height:100%;background:linear-gradient(90deg,#d4543c,#f2a91f);width:100%}
+  .mcols{display:flex;gap:10px}
+  .mcol{flex:1;display:flex;flex-direction:column;gap:8px}
+  .mbtn{font:inherit;font-weight:800;font-size:clamp(14px,3.8vw,18px);padding:10px 8px;border-radius:14px;border:3px solid #e6cfa5;background:#fff;color:var(--ink);cursor:pointer;min-height:56px;line-height:1.35}
+  .mbtn.term{background:#fff3d6;border-color:#c8955a}
+  .mbtn.sel{outline:4px solid #f2a91f;transform:scale(1.03)}
+  .mbtn.done{border-color:var(--ok);opacity:.85;cursor:default}
+  #choiceCtrl{position:absolute;bottom:10px;left:0;right:0;display:none;flex-wrap:wrap;justify-content:center;gap:8px;padding:0 10px;z-index:4}
+  #choiceCtrl.on{display:flex}
+  #choiceCtrl button{flex:1 1 30%;max-width:260px;min-height:56px;border-radius:16px;border:0;font:inherit;font-weight:900;font-size:clamp(15px,4.2vw,20px);cursor:pointer;color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.25),0 8px 16px rgba(0,0,0,.25);line-height:1.25;padding:6px}
+  #choiceCtrl button:active{transform:translateY(3px)}
+  #choiceCtrl.four button{flex:1 1 44%}
+  .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:40}
+  .confetti span{position:absolute;top:-40px;animation:fall 4.5s linear infinite}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+  /* map */
+  .mapWrap{max-width:560px;width:100%;margin:auto 0}
+  .mapTitle{color:#fff;font-size:clamp(28px,7vw,44px);font-weight:900;text-shadow:0 3px 0 var(--mud-d),0 6px 18px rgba(0,0,0,.5);margin:6px 0}
+  .mapHello{color:#fff;font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,.6);margin-bottom:10px;font-size:clamp(15px,4vw,19px)}
+  .node{display:flex;align-items:center;gap:12px;background:rgba(255,248,236,.95);border:4px solid var(--mud);border-radius:20px;padding:10px 12px;margin:8px 0;text-align:right;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.3);position:relative}
+  .node .ic{font-size:34px;width:54px;height:54px;border-radius:50%;background:#f3e2c0;display:flex;align-items:center;justify-content:center;flex:none}
+  .node .tx{flex:1}
+  .node .tx b{display:block;font-size:clamp(17px,4.6vw,22px)}
+  .node .tx span{font-size:clamp(13px,3.6vw,16px);opacity:.85}
+  .node .st{font-size:18px;white-space:nowrap}
+  .node.lock{filter:grayscale(.85);opacity:.72;cursor:default}
+  .node.cur{border-color:var(--gold);box-shadow:0 0 0 4px rgba(242,182,50,.5),0 6px 16px rgba(0,0,0,.3);animation:glow 1.6s ease-in-out infinite}
+  @keyframes glow{50%{box-shadow:0 0 0 8px rgba(242,182,50,.25),0 6px 16px rgba(0,0,0,.3)}}
+  .pearlTot{display:inline-block;background:rgba(255,248,236,.92);border-radius:99px;padding:4px 14px;font-weight:800;margin-bottom:6px}
+  @media (max-width:520px){
+    .story{flex-direction:column;align-items:center;gap:0}
+    .story img{width:84px;margin-bottom:-14px;position:relative;z-index:2}
+    .bubble{padding-top:20px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <audio id="bgm" src="game-assets/music.mp3" loop preload="auto"></audio>
+  <button id="muteBtn" aria-label="الموسيقى">🎵</button>
+  <canvas id="cv"></canvas>
+
+  <div id="hud">
+    <div class="hrow">
+      <div class="pill" id="pearls">🦪 <span>0</span></div>
+      <div class="pill" id="hearts">❤️❤️❤️</div>
+      <div class="pill"><button id="pauseBtn">⏸️</button></div>
+    </div>
+    <div class="task" id="task"></div>
+    <div class="prog"><i id="progBar"></i></div>
+  </div>
+  <div class="ctrl" id="ctrl"><button id="bR" aria-label="يمين">▶</button><button id="bL" aria-label="يسار">◀</button></div>
+  <div class="ctrl" id="sortCtrl"><button class="inh" id="sR">🧬 وراثية</button><button class="acq" id="sL">📚 مكتسبة</button></div>
+  <div id="choiceCtrl"></div>
+  <div id="fam"><div class="famBox" id="famBox"></div></div>
+
+  <section class="screen on" id="sTitle">
+    <div class="bgimg" style="background-image:url(game-assets/title.webp)"></div>
+    <h1 class="title">رحلة الدانة</h1>
+    <div class="subtitle">رحلة علمية في جسم الإنسان 🧬 من الفريج إلى أعماق البحر</div>
+    <button class="btn" id="goStart">ابدأ الرحلة</button>
+    <div class="hint-small">العلوم — الصف الرابع — الفصل الأول: تركيب جسم الإنسان</div>
+  </section>
+
+  <section class="screen" id="sChar">
+    <div class="bgimg" style="background-image:url(game-assets/fareej.webp)"></div>
+    <div class="card" style="margin:auto">
+      <div style="font-size:clamp(20px,5vw,28px);font-weight:900">اختر شخصيتك</div>
+      <div class="chars">
+        <div class="char" data-c="boy"><img src="game-assets/boy.webp" alt="ولد بالدشداشة والقحفية"><b>بحّار الفريج</b></div>
+        <div class="char" data-c="girl"><img src="game-assets/girl.webp" alt="بنت بالدراعة والبخنق"><b>بنت الفريج</b></div>
+      </div>
+      <input class="name" id="nameIn" maxlength="18" placeholder="اكتب اسمك هنا" autocomplete="off">
+      <br><button class="btn" id="goMap" disabled>هيا بنا!</button>
+    </div>
+  </section>
+
+  <section class="screen" id="sMap">
+    <div class="bgimg" style="background-image:url(game-assets/title.webp)"></div>
+    <div class="mapWrap">
+      <div class="mapTitle">🗺️ خريطة الرحلة</div>
+      <div class="mapHello" id="mapHello"></div>
+      <div class="pearlTot" id="mapPearls"></div>
+      <div id="nodes"></div>
+      <button class="linkbtn" id="teacherBtn">🔑 للمعلمة: فتح جميع المراحل</button>
+      <br><button class="linkbtn" id="changeChar">تغيير الشخصية أو الاسم</button>
+    </div>
+  </section>
+
+  <section class="screen" id="sStory">
+    <div class="bgimg" id="storyBg"></div>
+    <div class="story">
+      <img src="game-assets/nokh.webp" alt="النوخذة">
+      <div class="bubble"><span class="who">النوخذة بو سالم</span><span id="storyTxt"></span>
+        <div class="btnrow" style="justify-content:flex-start"><button class="btn sea" id="storyNext">التالي ⬅</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="sEnd">
+    <div class="bgimg" style="background-image:url(game-assets/title.webp)"></div>
+    <div class="cert">
+      <h2 id="certTitle"></h2>
+      <p>يشهد النوخذة بو سالم أنّ البحّار</p>
+      <div class="nm" id="certName"></div>
+      <div class="row"><img class="av" id="certAv" alt=""><img class="house" id="certImg" alt=""></div>
+      <p id="certText"></p>
+      <div class="stars" id="certStars"></div>
+      <p style="font-weight:800">🦪 لؤلؤ هذه المرحلة: <span id="certPearls"></span></p>
+      <p style="font-size:15px;opacity:.75" id="certDate"></p>
+    </div>
+    <div class="btnrow">
+      <button class="btn sea" id="toMapBtn">🗺️ خريطة الرحلة</button>
+      <button class="btn" id="againBtn">🔁 العب المرحلة مرة أخرى</button>
+    </div>
+    <div class="hint-small" id="endHint"></div>
+  </section>
+
+  <div id="modal"><div class="story">
+    <img src="game-assets/nokh.webp" alt="النوخذة">
+    <div class="bubble" style="flex:1"><span class="who">النوخذة بو سالم</span><div id="modalTxt"></div><div id="modalExtra"></div>
+      <div class="btnrow" style="justify-content:flex-start" id="modalBtns"></div></div>
+  </div></div>
+</div>
+
+<script>
+(()=>{
+"use strict";
+const $=s=>document.querySelector(s);
+const IMG={};
+function loadImg(k,src){return new Promise(r=>{const i=new Image();i.onload=()=>{IMG[k]=i;r()};i.onerror=r;i.src=src;})}
+const SRC={girl:'game-assets/girl.webp',boy:'game-assets/boy.webp',fareej:'game-assets/fareej.webp',house:'game-assets/house.webp',hosh:'game-assets/hosh.webp',nagaa:'game-assets/nagaa.webp',tray:'game-assets/tray.webp',deep:'game-assets/deep.webp',diver:'game-assets/diver.webp',dayyin:'game-assets/dayyin.webp',midsea:'game-assets/midsea.webp',heartcap:'game-assets/heartcap.webp',final:'game-assets/title.webp',oysclosed:'game-assets/oysc.webp',oysopen:'game-assets/oyso.webp',dana:'game-assets/dana.webp',chest:'game-assets/chest.webp',slate:'game-assets/slate.webp'};
+Object.entries(SRC).forEach(([k,v])=>loadImg(k,v));
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* =================== CONTENT =================== */
+/* ---- Stage 1: lesson 1 (cell) ---- */
+const PARTS={
+  wall:{n:'الجدار الخلوي',f:'يعطي الخلية شكلًا منتظمًا ويحميها'},
+  memb:{n:'الغشاء الخلوي',f:'ينظّم مرور المواد من الخلية وإليها'},
+  nuc:{n:'النواة',f:'تتحكم في جميع أنشطة الخلية'},
+  mito:{n:'الميتوكندريا',f:'مصدر الطاقة في الخلية'},
+  chlo:{n:'البلاستيدات الخضراء',f:'تصنع الغذاء باستخدام الضوء'},
+};
+const JUNK=['الشراع','المجداف','الحبل','الرمل','الصدفة','الفنر'];
+const SEQ=['الخلية','النسيج','العضو','الجهاز'];
+const ORDER_FACTS={'الخلية':'أصغر وحدة بنائية في جسم الكائن الحي','النسيج':'مجموعة خلايا متشابهة تعمل معًا','العضو':'مجموعة أنسجة تعمل معًا','الجهاز':'مجموعة أعضاء تعمل معًا لوظيفة حيوية'};
+
+/* ---- Stage 2: lesson 2 (heredity) ---- */
+const TR_H=[ // human traits
+ {t:'لون العينين',e:'👁️',inh:1},{t:'لون الشعر',e:'💇',inh:1},{t:'نوع الشعر: مجعّد أو أملس',e:'🌀',inh:1},{t:'لون البشرة',e:'✋',inh:1},{t:'شكل العينين',e:'👀',inh:1},
+ {t:'السباحة',e:'🏊',inh:0},{t:'الغوص على اللؤلؤ',e:'🤿',inh:0},{t:'حياكة السدو',e:'🧶',inh:0},{t:'القراءة والكتابة',e:'📖',inh:0},{t:'العزف على العود',e:'🎶',inh:0},{t:'التحدّث بلغة جديدة',e:'🗣️',inh:0},{t:'صيد السمك',e:'🎣',inh:0}];
+const TR_AP=[ // animals & plants
+ {t:'لون ريش الطائر',e:'🪶',inh:1},{t:'لون فراء القطة',e:'🐈',inh:1},{t:'شكل جسم الحيوان',e:'🐪',inh:1},{t:'شكل ورقة النبات',e:'🍃',inh:1},{t:'لون بتلات الزهرة',e:'🌻',inh:1},{t:'شكل منقار الببغاء',e:'🦜',inh:1},
+ {t:'الببغاء يقلّد صوت الإنسان',e:'🦜',inh:0},{t:'الصقر يتعلّم الصيد مع صاحبه',e:'🦅',inh:0},{t:'تلوين بتلات الزهرة بالألوان',e:'🎨',inh:0},{t:'ذبول النبات وتغيّر لونه',e:'🥀',inh:0},{t:'حركات حيوانات السيرك',e:'🎪',inh:0},{t:'الحصان يتعلّم القفز',e:'🐎',inh:0}];
+
+
+/* ---- Stage 3: lesson 3 (digestive system) ---- */
+const ORG={mouth:{n:'الفم',f:'تقطيع الطعام بالأسنان ومزجه باللعاب'},eso:{n:'المريء',f:'نقل الطعام من الفم إلى المعدة'},sto:{n:'المعدة',f:'خلط الطعام بالعصارات الهضمية فيصبح سائلًا غليظًا'},
+  si:{n:'الأمعاء الدقيقة',f:'استكمال الهضم وانتقال الغذاء إلى الدم'},li:{n:'الأمعاء الغليظة',f:'تجميع بقايا الطعام غير المهضوم (الفضلات)'},anus:{n:'الشرج',f:'إخراج فضلات عملية الهضم'}};
+const ORDER=['mouth','eso','sto','si','li','anus'];
+const HABITS=[
+ {t:'🧼 غسل اليدين قبل الأكل',ok:1,why:'غسل اليدين يمنع دخول الجراثيم إلى الجهاز الهضمي.'},
+ {t:'💧 شرب كمية كافية من الماء',ok:1,why:'شرب الماء يسهّل عملية الهضم.'},
+ {t:'🦷 مضغ الطعام جيدًا قبل البلع',ok:1,why:'المضغ الجيد يقطّع الطعام ويمزجه باللعاب فيسهل هضمه.'},
+ {t:'🥗 تناول وجبات صحية',ok:1,why:'الوجبات الصحية تعطي الجسم الطاقة والمغذيات للنمو والحركة والصحة.'},
+ {t:'🍽️ بلع الطعام بسرعة دون مضغ',ok:0,why:'بلع الطعام دون مضغ يُتعب الجهاز الهضمي! يجب <b>مضغ الطعام جيدًا قبل البلع</b>.'},
+ {t:'✋ الأكل بيدين غير مغسولتين',ok:0,why:'الأيدي المتّسخة تنقل <b>الجراثيم</b> إلى الجهاز الهضمي! اغسل يديك قبل الأكل.'},
+ {t:'🚱 قلّة شرب الماء',ok:0,why:'الجسم يحتاج إلى <b>كمية كافية من الماء</b> لتسهيل عملية الهضم.'},
+ {t:'🍬 الإكثار من الحلويات',ok:0,why:'الإكثار من الحلويات ليس عادة صحية! نحتاج إلى <b>وجبات صحية</b> تمدّ الجسم بالمغذيات.'}];
+
+/* ---- Stage 4: lesson 4 (respiratory system) ---- */
+const RESP={nose:{n:'الأنف',f:'دخول الهواء وخروجه'},trach:{n:'القصبة الهوائية',f:'نقل الهواء'},lungs:{n:'الرئتان',f:'أخذ الأكسجين وإخراج ثاني أكسيد الكربون'},diaph:{n:'الحجاب الحاجز',f:'يساعد على إدخال الهواء وإخراجه من الرئتين'}};
+const NOTRESP=[{n:'المعدة',s:'الجهاز الهضمي'},{n:'الأمعاء الدقيقة',s:'الجهاز الهضمي'},{n:'المريء',s:'الجهاز الهضمي'},{n:'الأمعاء الغليظة',s:'الجهاز الهضمي'},{n:'القلب',s:'الجهاز الدوري'}];
+const BUB={in:['ينخفض الحجاب الحاجز إلى الأسفل','يزداد حجم الرئتين','يدخل الهواء إلى الرئتين','يدخل الأكسجين إلى الجسم'],
+           out:['يرتفع الحجاب الحاجز إلى الأعلى','يقلّ حجم الرئتين','يخرج الهواء من الرئتين','يخرج ثاني أكسيد الكربون']};
+const BOARDS=[
+ {title:'أعضاء الجهاز التنفسي',pairs:[['الأنف','دخول الهواء وخروجه'],['القصبة الهوائية','نقل الهواء'],['الرئتان','أخذ الأكسجين وإخراج ثاني أكسيد الكربون'],['الحجاب الحاجز','يساعد على إدخال الهواء وإخراجه من الرئتين']]},
+ {title:'المصطلحات العلمية',pairs:[['الشهيق','عملية دخول الهواء إلى الرئتين'],['الزفير','عملية خروج الهواء من الرئتين'],['الحجاب الحاجز','عضلة التنفس الأساسية، تتحرك لا إراديًّا'],['الأكسجين','ضروري لحرق الطعام والحصول على الطاقة']]},
+ {title:'صحة الجهاز التنفسي',pairs:[['تنفّس الهواء النقي','يحافظ على صحة الجهاز التنفسي'],['ممارسة الرياضة','تحسّن عملية التنفس'],['تجنّب التدخين','لأنه يتلف الرئتين']]}];
+
+const STAGES=[
+ { id:1, place:'الفريج', icon:'🧱', lesson:'الدرس ١: الخلية… وحدة البناء', bg:'fareej', wall:true,
+   intro:n=>[
+    `أهلًا وسهلًا يا <b>${n}</b>! أنا النوخذة بو سالم ⛵. سفينتنا ستُبحر قريبًا لتبحث عن <b>الدانة</b>، أكبر لؤلؤة في الخليج!`,
+    `لكن قبل الرحلة، عليك أن <b>تبني بيتك في الفريج</b> 🧱. البيت يتكوّن من قطع طوب صغيرة… وكذلك جسمك يتكوّن من وحدات صغيرة جدًّا اسمها <b>الخلايا</b>!`,
+    `<b>الخلية</b> هي أصغر وحدة بنائية في جسم الكائن الحي، ولا نراها إلا <b>بالمجهر</b> 🔬.<br>حرّك شخصيتك بإصبعك (أو بالأسهم ⬅➡) والتقط الطوب الصحيح.`],
+   levels:[
+    {type:'catch', title:'التقط مكوّنات الخلية النباتية 🌿', sub:'وابتعد عن أغراض البحّارة!', need:7, speed:1.0, gap:1.15,
+     intro:'لنبدأ بأساس البيت! التقط الطوب الذي يحمل <b>مكوّنات الخلية النباتية</b>، وانتبه: أغراض البحّارة ليست من مكوّنات الخلية!',
+     make(){ if(Math.random()<.58){const k=pick(Object.keys(PARTS));return {t:PARTS[k].n,ok:true,k}} return {t:pick(JUNK),ok:false,why:'هذا من أغراض البحّارة، وليس من مكوّنات الخلية! 😄 مكوّنات الخلية النباتية: الجدار الخلوي، الغشاء الخلوي، النواة، الميتوكندريا، البلاستيدات الخضراء.'} }},
+    {type:'catch', title:'التقط مكوّنات الخلية الحيوانية فقط 🐟', sub:'احذر! بعض المكوّنات موجودة في الخلية النباتية فقط', need:7, speed:1.15, gap:1.05,
+     intro:'أحسنت! الآن الجدار يحتاج طوبًا خاصًّا: التقط <b>مكوّنات الخلية الحيوانية فقط</b>. فكّر جيدًا… هل كل ما في الخلية النباتية موجود في الحيوانية؟',
+     make(){ if(Math.random()<.55){const k=pick(['memb','nuc','mito']);return {t:PARTS[k].n,ok:true,k}}
+       const k=pick(['wall','chlo']);
+       return {t:PARTS[k].n,ok:false,why: k==='wall'?'الخلية الحيوانية <b>ليس لها جدار خلوي</b>! الجدار الخلوي في الخلية النباتية فقط، يعطيها شكلًا منتظمًا ويحميها. لذلك شكل الخلية الحيوانية دائري غير منتظم.':'الخلية الحيوانية <b>ليس فيها بلاستيدات خضراء</b>! لأنّ الحيوان لا يصنع غذاءه بنفسه، أمّا النبات فيصنعه باستخدام الضوء.'} }},
+    {type:'catch', chain:true, title:'ابنِ السلّم: التقط مستويات التعضّي بالترتيب 🪜', sub:'ابدأ من الأصغر', need:8, speed:1.2, gap:1.0,
+     intro:'جسم الإنسان يُبنى طبقةً فوق طبقة، مثل درج البيت! التقط <b>مستويات التعضّي بالترتيب</b>: من الأصغر إلى الأكبر.',
+     make(){ const want=SEQ[G.chainIdx%4]; return {t: Math.random()<.5? want : pick(SEQ.filter(s=>s!==want)), ok:null}; }},
+    {type:'catch', func:true, wide:true, title:'', sub:'التقط الطوبة التي تحمل الوظيفة الصحيحة', need:5, speed:1.05, gap:1.25,
+     intro:'آخر جدار في البيت! سأذكر لك <b>مكوّنًا</b> من مكوّنات الخلية، وعليك أن تلتقط الطوبة التي تحمل <b>وظيفته</b>.',
+     make(){ const want=G.funcKey; if(Math.random()<.45) return {t:PARTS[want].f,ok:true,k:want};
+       const k=pick(Object.keys(PARTS).filter(x=>x!==want)); return {t:PARTS[k].f,ok:false,k,why:`هذه وظيفة <b>${PARTS[k].n}</b>: ${PARTS[k].f}. أمّا <b>${PARTS[want].n}</b> فوظيفته: ${PARTS[want].f}.`}; }},
+   ],
+   quizIntro:n=>`ممتاز يا ${n}! البيت تقريبًا جاهز 🏠. بقي <b>الباب</b>! لن يُفتح إلا إذا أجبت عن <b>أسئلتي الثلاثة</b>. كل إجابة صحيحة تساوي <b>3 لآلئ</b> 🦪!`,
+   quizDone:'افتح الباب! 🚪',
+   quiz:[
+    {q:'أيّ العبارات الآتية تدل على <b>الخلية الحيوانية فقط</b>؟',a:'لها شكل دائري',w:['يحيط بها جدار خلوي','لها شكل مستطيل منتظم','لا تحتوي على نواة'],why:'الخلية الحيوانية ليس لها جدار خلوي، لذلك شكلها دائري غير منتظم.'},
+    {q:'مجموعة <b>الخلايا المتشابهة</b> التي تعمل معًا تكوّن:',a:'نسيجًا',w:['عضوًا','جهازًا','جسم كائن حي'],why:'الخلايا المتشابهة تكوّن النسيج، والأنسجة تكوّن العضو، والأعضاء تكوّن الجهاز.'},
+    {q:'وجد يوسف خليّة فيها <b>بلاستيدات خضراء</b>. ما نوع هذه الخلية؟',a:'خلية نباتية',w:['خلية حيوانية','خلية في جسم الإنسان','خلية سمكة'],why:'البلاستيدات الخضراء موجودة في الخلية النباتية فقط، وتصنع الغذاء باستخدام الضوء.'},
+    {q:'نستخدم <b>المجهر</b> في درس الخلية لأنه:',a:'يكبّر الأجسام الصغيرة جدًّا التي لا تُرى بالعين المجردة',w:['يصغّر الأجسام الكبيرة','يلوّن الخلايا','يقيس طول الجسم'],why:'الخلية صغيرة جدًّا، والمجهر يكبّرها لنراها.'}],
+   cert:{title:'🏅 شهادة «بنّاء الخلايا» 🏅', img:'house', text:'أتمّ بناء بيته في الفريج، وعرف أنّ <b>الخلية</b> هي أصغر وحدة بنائية في جسم الكائن الحي.'}
+ },
+ { id:2, place:'بيت الأهل', icon:'👨‍👩‍👧', lesson:'الدرس ٢: الخلية والوراثة', bg:'hosh',
+   intro:n=>[
+    `أحسنت يا <b>${n}</b>! بيتك جاهز 🏠. قبل أن نُبحر، اذهب إلى <b>بيت أهلك</b> لتودّعهم 👨‍👩‍👧.`,
+    `هل لاحظت يومًا أنك <b>تشبه أباك أو أمك</b>؟ ربما في لون عينيك أو نوع شعرك! هذا هو <b>سرّ الشبه</b> 🔍.`,
+    `تذكّر <b>النواة</b>؟ في نواة كل خلية توجد <b>المادة الوراثية</b>، وهي تحمل الصفات وتنقلها من الآباء إلى الأبناء. وهذا اسمه <b>الوراثة</b> 🧬.`,
+    `لكن ليست كل صفاتك موروثة! السباحة والغوص والقراءة… هذه <b>صفات مكتسبة</b>: نتعلّمها أو نكتسبها من البيئة 📚.`],
+   levels:[
+    {type:'sort', items:TR_H, title:'صفاتي… وراثية أم مكتسبة؟ 🧑', sub:'اسحب البطاقة نحو الصندوق 🧬 أو اللوح 📚', need:8, speed:.85,
+     intro:'في بيت الأهل <b>صندوق مبيّت</b> قديم ورثته العائلة 🧰، و<b>لوح الكتاتيب</b> الذي نتعلّم عليه 📜.<br>ستسقط بطاقات فيها صفات: اسحبها (أو اضغط الزر) إلى <b>الصندوق ➡ إن كانت وراثية</b>، وإلى <b>⬅ اللوح إن كانت مكتسبة</b>!'},
+    {type:'sort', items:TR_AP, title:'صفات الحيوان والنبات 🦜🌻', sub:'أسرع! الصندوق للوراثية 🧬 واللوح للمكتسبة 📚', need:8, speed:1.15,
+     intro:'رائع! ليس الإنسان وحده من يرث الصفات. <b>الحيوانات والنباتات</b> أيضًا لها صفات وراثية وصفات مكتسبة. البطاقات ستسقط <b>أسرع</b> هذه المرّة! 🦜🌻'},
+    {type:'family', title:'سرّ الشبه 🔍', sub:'من ابن هذين الوالدين؟ انظر إلى العينين والشعر والبشرة', need:4,
+     intro:'جاءت العائلات لتودّعك! 👨‍👩‍👧 سأريك <b>أبًا وأمًّا</b>، وعليك أن تكتشف <b>من هو طفلهما</b> من بين أربعة أطفال. تذكّر: الأبناء يرثون صفاتهم من الآباء! أسرع قبل أن ينتهي الوقت ⏳.'}],
+   quizIntro:n=>`أحسنت يا ${n}! أهلك فخورون بك 👏. قبل أن تخرج من البيت، أجب عن <b>أسئلتي الثلاثة</b>. كل إجابة صحيحة تساوي <b>3 لآلئ</b> 🦪!`,
+   quizDone:'إلى البحر! ⛵',
+   quiz:[
+    {q:'الببغاء طائر جميل. أيّ صفاته الآتية تُعدّ <b>صفة مكتسبة</b>؟',a:'تقليد الأصوات',w:['لون العينين','لون الريش','شكل المنقار'],why:'الببغاء يتعلّم تقليد الأصوات من البيئة، أمّا لون عينيه وريشه وشكل منقاره فيرثها من أبويه.'},
+    {q:'بعض الناس شعرهم مجعّد وبعضهم شعرهم أملس. ما السبب؟',a:'نوع شعر الوالدين',w:['نوع شعر الأصدقاء','نوع شعر الإخوة','لون شعر الوالدين'],why:'نوع الشعر صفة وراثية تنتقل من الآباء إلى الأبناء.'},
+    {q:'قُطعت أوراق نبتة <b>تبّاع الشمس</b> ولُوّنت بتلاتها بالأحمر، ثم زُرعت بذورها. كيف سيكون النبات الجديد؟',a:'أزهاره صفراء وأوراقه خضراء',w:['أزهاره حمراء ولا أوراق له','أزهاره حمراء وأوراقه خضراء','لا أوراق له وأزهاره صفراء'],why:'الصفات الوراثية تنتقل إلى النبات الجديد، أمّا الصفات المكتسبة (القطع والتلوين) فلا تنتقل.'},
+    {q:'أين توجد <b>المادة الوراثية</b> المسؤولة عن حمل الصفات الوراثية ونقلها؟',a:'في نواة الخلية',w:['في الجدار الخلوي','في الميتوكندريا','في الغشاء الخلوي'],why:'تحتوي أنوية خلايا الكائن الحي على المادة الوراثية.'},
+    {q:'<b>الصفات المكتسبة</b> هي صفات:',a:'نتعلّمها أو نكتسبها من البيئة',w:['نرثها من الوالدين','موجودة في المادة الوراثية','لا يمكن تعلّمها أبدًا'],why:'الصفات المكتسبة ليست موروثة، بل تظهر خلال حياة الكائن الحي نتيجة التعلّم وتأثير البيئة.'},
+    {q:'صغار القطط تشبه أمها وأباها. ما الدليل على أنها أبناؤهما؟',a:'تشابه لون الفراء ولون العينين',w:['تحب اللعب بالكرة','تشرب الحليب','تنام كثيرًا'],why:'لون الفراء ولون العينين صفات وراثية تنتقل من الآباء إلى الأبناء.'}],
+   cert:{title:'🏅 شهادة «حارس سرّ الوراثة» 🏅', img:'chest', text:'اكتشف <b>سرّ الشبه</b>: الصفات الوراثية تنتقل من الآباء إلى الأبناء عن طريق المادة الوراثية في النواة، والصفات المكتسبة نتعلّمها من البيئة.'}
+ },
+
+ { id:3, place:'النقعة', icon:'🍽️', lesson:'الدرس ٣: الجهاز الهضمي', bg:'nagaa',
+   intro:n=>[
+    `وصلت إلى <b>النقعة</b> يا <b>${n}</b>! ⚓ البحّارة يجهّزون <b>زاد الرحلة</b>: تمر وخبز وسمك وأرز وماء 🧺.`,
+    `لكن… هل فكّرت يومًا: <b>ماذا يحدث للطعام بعد أن نأكله؟</b> 🤔 إنّه يقوم برحلة داخل جسمك عبر <b>الجهاز الهضمي</b>!`,
+    `الجهاز الهضمي <b>يهضم الطعام</b>، فيزوّد الجسم <b>بالطاقة</b> للنمو والحركة، وبـ<b>المغذّيات</b> للمحافظة على الصحة 💪.`],
+   levels:[
+    {type:'runner', title:'رحلة اللقمة 🌴', sub:'اضغط على مسار العضو التالي في الجهاز الهضمي', need:12, speed:1.0,
+     intro:'هذه <b>تمرة</b> 🌴 ستقوم برحلة داخل الجهاز الهضمي! <b>اضغط على المسار</b> الذي تريده (أو اسحب أو استخدم الأسهم) لتدخل <b>بوابة العضو الصحيح</b> بالترتيب. هل تعرف من أين تبدأ الرحلة؟'},
+    {type:'fish', title:'', sub:'اضغط على السمكة التي تحمل الوظيفة الصحيحة', need:6,
+     intro:'البحّارة يصطادون السمك للرحلة 🎣! كل سمكة تحمل <b>وظيفة عضو</b> من أعضاء الجهاز الهضمي. سأذكر لك <b>اسم العضو</b>، وعليك أن <b>تضغط على السمكة</b> التي تحمل وظيفته!'},
+    {type:'catch', title:'زاد البحّار الصحي 🧺', sub:'التقط العادات التي تحافظ على صحة الجهاز الهضمي', need:8, speed:1.1, gap:1.05,
+     intro:'أخيرًا، لنحافظ على صحة الجهاز الهضمي طوال الرحلة! التقط <b>العادات الصحية</b> فقط، وابتعد عن العادات الضارّة ❌.',
+     make(){ if(Math.random()<.56){const h=pick(HABITS.filter(x=>x.ok));return {t:h.t,ok:true,fact:'✔ '+h.why}} const h=pick(HABITS.filter(x=>!x.ok));return {t:h.t,ok:false,why:h.why} }}],
+   quizIntro:n=>`أحسنت يا ${n}! الزاد جاهز والسفينة تنتظر ⛵. قبل أن نُبحر، أجب عن <b>أسئلتي الثلاثة</b>. كل إجابة صحيحة تساوي <b>3 لآلئ</b> 🦪!`,
+   quizDone:'إلى الغوص! 🤿',
+   quiz:[
+    {q:'ما <b>الترتيب الصحيح</b> لمسار البلعة الغذائية في الجهاز الهضمي؟',a:'الفم ← المريء ← المعدة ← الأمعاء الدقيقة ← الأمعاء الغليظة ← الشرج',w:['الفم ← المريء ← المعدة ← الأمعاء الغليظة ← الأمعاء الدقيقة ← الشرج','الفم ← المعدة ← المريء ← الأمعاء الدقيقة ← الأمعاء الغليظة ← الشرج','الفم ← الأمعاء الدقيقة ← الأمعاء الغليظة ← المريء ← المعدة ← الشرج'],why:'تبدأ الرحلة من الفم، ثم المريء، ثم المعدة، ثم الأمعاء الدقيقة، ثم الأمعاء الغليظة، وأخيرًا الشرج.'},
+    {q:'يقول إبراهيم: «عملية الهضم تبدأ بالفم <b>وتُستكمل في الأمعاء الغليظة</b>». هل معلومته صحيحة؟',a:'لا، لأنّ الهضم يُستكمل في الأمعاء الدقيقة',w:['نعم، معلومته صحيحة','لا، لأنّ الهضم يبدأ في المعدة','لا، لأنّ الهضم يُستكمل في المريء'],why:'عملية الهضم تبدأ في الفم وتُستكمل في الأمعاء الدقيقة، أمّا الأمعاء الغليظة فتجمع الفضلات.'},
+    {q:'<b>المعدة</b> هي:',a:'عضو عضلي كيسي الشكل يعمل على هضم الطعام',w:['عضو ينقل الطعام من الفم','عضو يُخرج فضلات الهضم','عضو يقطّع الطعام بالأسنان'],why:'المعدة عضو عضلي كيسي الشكل، تخلط الطعام بالعصارات الهضمية فيتحوّل إلى سائل غليظ.'},
+    {q:'لماذا يجب <b>غسل اليدين</b> قبل تناول الطعام؟',a:'لمنع دخول الجراثيم إلى الجهاز الهضمي',w:['لتسهيل عملية الهضم','لتقطيع الطعام','لإخراج الفضلات'],why:'غسل اليدين يمنع دخول الجراثيم للجهاز الهضمي، وشرب الماء يسهّل الهضم.'},
+    {q:'أيّ ممّا يأتي من <b>فوائد الجهاز الهضمي</b>؟',a:'تزويد الجسم بالطاقة للنمو والحركة',w:['تنظيم النوم','تنمية المهارات الحركية','نقل الأكسجين إلى الرئتين'],why:'الجهاز الهضمي يهضم الطعام، فيزوّد الجسم بالطاقة وبالمغذّيات للمحافظة على الصحة.'},
+    {q:'أين تُجمَع <b>بقايا الطعام غير المهضوم</b> (الفضلات)؟',a:'في الأمعاء الغليظة',w:['في المعدة','في المريء','في الفم'],why:'الأمعاء الغليظة تجمع الفضلات، ثم يُخرجها الشرج.'}],
+   cert:{title:'🏅 شهادة «خبير رحلة اللقمة» 🏅', img:'tray', text:'تتبّع <b>رحلة الطعام</b> في الجهاز الهضمي من الفم إلى الشرج، وعرف وظيفة كل عضو، وكيف نحافظ على صحة الجهاز الهضمي.'}
+ },
+
+ { id:4, place:'الغوص', icon:'🤿', lesson:'الدرس ٤: الجهاز التنفسي', bg:'deep',
+   intro:n=>[
+    `حان وقت <b>الغوص</b> يا <b>${n}</b>! 🤿 أنت اليوم <b>السَّيْب</b>: تمسك حبل <b>الغيص</b> من السفينة وتوجّهه تحت الماء.`,
+    `الغيص يحبس نَفَسه تحت الماء… لكنّه يحتاج إلى <b>الأكسجين</b>! والمسؤول عن ذلك هو <b>الجهاز التنفسي</b> 🫁: يُدخل الأكسجين إلى الجسم ويُخرج ثاني أكسيد الكربون.`,
+    `الأكسجين ضروري لبقاء الكائنات الحية، ولـ<b>حرق الطعام</b> والحصول على <b>الطاقة</b> 💪. هيا ننزل إلى الأعماق!`],
+   levels:[
+    {type:'dive', title:'غوص المحار 🦪', sub:'افتح محار أعضاء الجهاز التنفسي فقط… وراقب الهواء!', need:7,
+     intro:'وجّه الغيص بإصبعك (أو بالأسهم ⬅➡⬆⬇) ليفتح <b>محار أعضاء الجهاز التنفسي</b> فقط 🦪. انتبه لـ<b>عدّاد الهواء</b> 🫁: إذا قلّ، اصعد إلى السطح لتأخذ <b>شهيقًا</b>!'},
+    {type:'bubble', title:'', sub:'اضغط على الفقاعة الصحيحة', need:8,
+     intro:'التنفس يحدث في <b>مرحلتين</b>: <b>الشهيق</b> 🌬️ (دخول الهواء إلى الرئتين) و<b>الزفير</b> 💨 (خروج الهواء منهما). ستصعد فقاعات فيها عبارات… <b>فرقع</b> فقاعات المرحلة المطلوبة، وراقب الرئتين والحجاب الحاجز!'},
+    {type:'match', title:'حبال التوصيل 🪢', sub:'اضغط على كلمة، ثم على ما يناسبها', need:11,
+     intro:'آخر مهمة قبل الصعود! <b>صِل</b> كل عضو أو مصطلح بما يناسبه: اضغط على الكلمة ثم على وظيفتها 🪢.'}],
+   quizIntro:n=>`أحسنت يا ${n}! الديّين امتلأ باللؤلؤ 🦪. قبل أن نُبحر إلى وسط البحر، أجب عن <b>أسئلتي الثلاثة</b>. كل إجابة صحيحة تساوي <b>3 لآلئ</b>!`,
+   quizDone:'إلى وسط البحر! ⛵',
+   quiz:[
+    {q:'يحتاج الإنسان إلى الطاقة للدراسة واللعب. <b>كيف يحصل على الطاقة؟</b>',a:'من خلال حرق الطعام في الجسم باستخدام الأكسجين',w:['من خلال إخراج ثاني أكسيد الكربون فقط','من خلال النوم فقط','من خلال حبس النَّفَس'],why:'الأكسجين ضروري لحرق الطعام في الجسم والحصول على الطاقة.'},
+    {q:'ماذا يحدث عندما <b>ينخفض الحجاب الحاجز</b> إلى الأسفل؟',a:'يزداد حجم الرئتين فيدخل الهواء إليهما',w:['يقلّ حجم الرئتين فيخرج الهواء منهما','يتوقف التنفس','ينتقل الطعام إلى المعدة'],why:'عند الشهيق ينخفض الحجاب الحاجز فيزداد حجم الرئتين ويدخل الهواء، وعند الزفير يرتفع فيقلّ حجمهما ويخرج الهواء.'},
+    {q:'اكتشف <b>المتناقض</b>: القصبة الهوائية، الرئتان، الأمعاء الدقيقة، الحجاب الحاجز',a:'الأمعاء الدقيقة',w:['القصبة الهوائية','الرئتان','الحجاب الحاجز'],why:'الأمعاء الدقيقة ليست من أعضاء الجهاز التنفسي، بل من الجهاز الهضمي.'},
+    {q:'ما وظيفة <b>الرئتين</b>؟',a:'أخذ الأكسجين وإخراج ثاني أكسيد الكربون',w:['نقل الطعام إلى المعدة','تقطيع الطعام ومزجه باللعاب','ضخّ الطعام إلى الأمعاء'],why:'الرئتان تأخذان الأكسجين وتُخرجان ثاني أكسيد الكربون.'},
+    {q:'لماذا يجب <b>تجنّب التدخين</b>؟',a:'لأنه يتلف الرئتين',w:['لأنه يقوّي الرئتين','لأنه يزيد الأكسجين','لأنه يحسّن عملية التنفس'],why:'التدخين يتلف الرئتين، أمّا الرياضة والهواء النقي فيحافظان على صحة الجهاز التنفسي.'},
+    {q:'<b>الحجاب الحاجز</b> عضلة:',a:'تتحرك لا إراديًّا ولها دور كبير في التنفس',w:['نحرّكها بإرادتنا فقط','توجد في المعدة','تنقل الطعام إلى الأمعاء'],why:'الحجاب الحاجز عضلة التنفس الأساسية، وتتحرك لا إراديًّا.'}],
+   cert:{title:'🏅 شهادة «الغيص الماهر» 🏅', img:'dayyin', text:'عرف <b>أعضاء الجهاز التنفسي</b> ووظائفها، وكيف نتنفس بـ<b>الشهيق والزفير</b>، وكيف نحافظ على صحة الجهاز التنفسي.'}
+ },
+
+ { id:5, place:'وسط البحر', icon:'⛵', lesson:'الدرس ٥: الجهاز الدوري', bg:'midsea',
+   intro:n=>[
+    `نحن الآن في <b>وسط البحر</b> يا <b>${n}</b>! ⛵ السفينة تحتاج إلى من يوصل <b>الزاد</b> لكل البحّارة… تمامًا مثل جسمك!`,
+    `هل تساءلت يومًا: كيف يصل <b>الغذاء المهضوم والأكسجين</b> إلى كل جزء من جسمك، من رأسك حتى أطراف أصابع قدمك؟ 🤔`,
+    `المسؤول هو <b>الجهاز الدوري</b> ❤️: ينقل <b>الدم</b> المحمّل بالأكسجين والغذاء إلى جميع أجزاء الجسم، ثم يعود بالدم المحمّل <b>بالفضلات</b> للتخلص منها.`,
+    `<b>القلب</b> عضو عضلي يضخّ الدم، و<b>الأوعية الدموية</b> شبكة أنابيب تنقل الدم داخل الجسم. هيا نُبحر! 🌊`],
+   levels:[
+    {type:'voyage', title:'رحلة سفينة الدم 🗺️', sub:'', need:9,
+     intro:'سفينتك هي <b>الدم</b> 🩸، و<b>القلب</b> هو الميناء! أوصل <b>الأكسجين والغذاء</b> إلى أجزاء الجسم ثم عُد بـ<b>الفضلات</b>. اختر الطريق الصحيح في كل خطوة: <b>الشريان 🔴</b> أم <b>الشعيرات الدموية 🔄</b> أم <b>الوريد 🔵</b>؟'},
+    {type:'crew', title:'طاقم الدم 🚨', sub:'أرسل المكوّن المناسب قبل أن ينتهي الوقت', need:8,
+     intro:'للدم <b>طاقم</b> مكوّن من أربعة أبطال، ولكل واحد وظيفة! 🔴 خلايا الدم الحمراء، ⚪ خلايا الدم البيضاء، 🟡 الصفائح الدموية، 💧 البلازما. ستحدث مواقف على السفينة… <b>أرسل البطل المناسب بسرعة</b>!'},
+    {type:'riddle', title:'حزّورة النوخذة 🤔', sub:'اقرأ التلميحات واختر الإجابة', need:6,
+     intro:'أحبّ الحزاوي! 😄 سأعطيك <b>تلميحات</b> واحدًا بعد الآخر، وعليك أن تعرف <b>من أنا</b>. كلما أجبت <b>أسرع</b> (بتلميحات أقل) ربحت <b>لؤلؤًا أكثر</b>! 🦪'}],
+   quizIntro:n=>`أحسنت يا قبطان ${n}! ❤️ وصل الزاد إلى كل البحّارة. أجب عن <b>أسئلتي الثلاثة</b>، وكل إجابة صحيحة تساوي <b>3 لآلئ</b>!`,
+   quizDone:'إلى التحدي الأخير! 🐚',
+   quiz:[
+    {q:'الجهاز الدوري ينقل الدم إلى أجزاء الجسم. <b>لماذا هذه العملية مهمة؟</b>',a:'لأنّ الدم يحمل الأكسجين والغذاء لجميع أجزاء الجسم، وينقل الفضلات للتخلص منها',w:['لأنّ الدم يهضم الطعام','لأنّ الدم يُدخل الهواء إلى الرئتين','لأنّ الدم يقطّع الطعام'],why:'الدم يحمل الأكسجين والغذاء المهضوم لجميع أجزاء الجسم، كما ينقل الفضلات للتخلص منها.'},
+    {q:'من أعضاء الجهاز الدوري <b>القلب</b>. ما العضو الآخر؟',a:'الأوعية الدموية',w:['الرئتان','المعدة','القصبة الهوائية'],why:'يتكوّن الجهاز الدوري من القلب والأوعية الدموية، والدم من مكوّناته.'},
+    {q:'كيف تختلف <b>الشرايين</b> عن <b>الأوردة</b>؟',a:'الشرايين تنقل الدم من القلب إلى أجزاء الجسم، والأوردة من أجزاء الجسم إلى القلب',w:['الأوردة تنقل الدم من القلب إلى أجزاء الجسم، والشرايين من أجزاء الجسم إلى القلب','الشرايين تهضم الطعام والأوردة تنقل الهواء','لا يوجد فرق بينهما'],why:'الشرايين: من القلب إلى أجزاء الجسم. الأوردة: من أجزاء الجسم إلى القلب.'},
+    {q:'تعاني أسيل من <b>صعوبة وتأخّر التئام جروحها</b>. ما السبب؟',a:'نقص الصفائح الدموية في دمها',w:['نقص البلازما في دمها','زيادة خلايا الدم الحمراء','زيادة الأكسجين في دمها'],why:'الصفائح الدموية تساعد على تجلّط الدم لالتئام الجروح.'},
+    {q:'ماذا يحدث عند <b>انخفاض عدد خلايا الدم البيضاء</b> بشكل كبير؟',a:'الإصابة بالأمراض بشكل متكرر',w:['سرعة التئام الجروح','زيادة النشاط والحركة','زيادة الأكسجين في الجسم'],why:'خلايا الدم البيضاء تهاجم الجراثيم لحماية الجسم من الأمراض.'},
+    {q:'ماذا يحدث عند <b>انخفاض عدد خلايا الدم الحمراء</b> بشكل كبير؟',a:'التعب وضعف النشاط والحركة',w:['الإصابة بالأمراض فقط','سرعة التئام الجروح','زيادة الطاقة'],why:'خلايا الدم الحمراء تنقل الأكسجين والغذاء المهضوم إلى أجزاء الجسم.'},
+    {q:'أيّ ممّا يأتي <b>يحافظ على صحة الجهاز الدوري</b>؟',a:'ممارسة الرياضة وأخذ قسط كافٍ من النوم',w:['السهر طوال الليل','الجلوس طوال اليوم دون حركة','ترك تناول الطعام الصحي'],why:'للمحافظة على صحة الجهاز الدوري: تناول الطعام الصحي، وأخذ قسط كافٍ من النوم، وممارسة الرياضة.'}],
+   cert:{title:'🏅 شهادة «قبطان سفينة الدم» 🏅', img:'heartcap', text:'عرف أنّ <b>القلب</b> يضخّ الدم، وأنّ <b>الأوعية الدموية</b> (الشرايين والأوردة والشعيرات الدموية) تنقله، وأنّ لكل مكوّن من مكوّنات الدم وظيفة.'}
+ },
+
+ { id:6, place:'التحدي الأخير', icon:'🐚', lesson:'الدرس ٦: استجابة الجسم + مراجعة الفصل', bg:'final', final:true,
+   intro:n=>[
+    `يا <b>${n}</b>! 🌅 الشمس تغرب، والسفينة في طريق العودة إلى الكويت… لكن النوخذة رأى شيئًا يلمع تحت الماء!`,
+    `إنّها <b>المحارة العملاقة</b> 🦪 التي تخبّئ <b>الدانة</b>! لكنّ الطريق إليها صعب: سباق، وحرّ، وبرد، وخوف…`,
+    `هل لاحظت أنّ قلبك ينبض بسرعة عندما تخاف؟ أو أنّك تتعرّق بعد الرياضة؟ هذه <b>استجابة الجسم</b> للعوامل المختلفة 🌡️. هيا نكتشفها!`],
+   levels:[
+    {type:'race', title:'سباق التجديف 🚣', sub:'اضغط «جدّف» بسرعة وراقب نبضات قلبك وتنفّسك', need:5,
+     intro:'سباق إلى المحارة! 🚣 اضغط زر <b>«جدّف»</b> بسرعة لتسبق سفينة الجيران. راقب <b>عدّاد نبضات القلب</b> 💓 و<b>عدّاد التنفس</b> 😮‍💨 وأنت تجدّف… وأجب عند كل عوّامة 🛟!'},
+    {type:'respond', title:'ماذا يحدث لجسمي؟ 🌡️', sub:'اختر كل الاستجابات الصحيحة ثم اضغط تأكيد', need:6,
+     intro:'جسم الإنسان <b>يستجيب</b> للعوامل المختلفة: الحرارة، والبرد، والخوف، والرياضة! سأعرض لك موقفًا، واختر <b>كل</b> استجابات جسمك الصحيحة: 💦 العرق، 🥶 الرعشة، 💓 تسارع نبضات القلب، 😮‍💨 تسارع التنفس.'},
+    {type:'boss', title:'المحارة العملاقة 🦪👑', sub:'كل إجابة صحيحة تكسر قفلًا', need:8,
+     intro:'وصلنا! 🦪 هذه <b>المحارة العملاقة</b> مقفلة بـ<b>٨ أقفال</b>. كل عبارة <b>صحيحة أو خطأ</b> من كل ما تعلّمته في رحلتنا تكسر قفلًا… اكسرها كلها لتحصل على <b>الدانة</b>! 👑'}],
+   quizIntro:n=>`✨ <b>مبروك يا ${n}!</b> حصلت على <b>الدانة</b>! 👑 قبل أن نعود إلى الكويت، أجب عن <b>أسئلتي الأخيرة</b>. كل إجابة صحيحة تساوي <b>3 لآلئ</b>!`,
+   quizDone:'العودة إلى الكويت! 🇰🇼',
+   quiz:[
+    {q:'يشعر عبدالعزيز بتسارع نبضات قلبه وتنفسه عند ممارسة التمارين. <b>ما السبب؟</b>',a:'حاجة العضلات لكمية أكبر من الأكسجين',w:['نقص كمية الهواء في قاعة التمرين','حاجة العضلات لكمية أقل من الطاقة','خلل في عمل الجهاز التنفسي'],why:'العضلات تحتاج إلى أكسجين أكثر لإنتاج الطاقة، فيتسارع القلب والتنفس.'},
+    {q:'الشخص (١): نبضات القلب ٨٠ والتنفس معتدل. الشخص (٢): نبضات القلب ١٢٠ والتنفس سريع. <b>أيّهما يمارس التمارين الرياضية؟</b>',a:'الشخص (٢)',w:['الشخص (١)','كلاهما','لا أحد منهما'],why:'ممارسة الرياضة تسبّب زيادة نبضات القلب وتسارع التنفس.'},
+    {q:'كيف يستجيب الجسم <b>لارتفاع درجة الحرارة</b>؟',a:'إفراز العرق الذي يساعد تبخّره على تبريد الجسم',w:['اهتزاز العضلات (الرعشة)','توقّف التنفس','بطء نبضات القلب'],why:'العرق يتبخّر فيبرّد الجسم.'},
+    {q:'كيف يستجيب الجسم <b>لانخفاض درجة الحرارة</b>؟',a:'اهتزاز العضلات (الرعشة) لتوليد حرارة تدفئ الجسم',w:['إفراز العرق بكثرة','تسارع الهضم','توقّف القلب عن النبض'],why:'الرعشة تولّد حرارة تدفئ الجسم.'},
+    {q:'أيّ ممّا يأتي من <b>استجابات الجسم لعامل الخوف</b>؟',a:'تسارع نبضات القلب وتسارع التنفس',w:['بطء نبضات القلب','النوم العميق','توقّف التعرّق تمامًا'],why:'عند الخوف: تتسارع نبضات القلب والتنفس، وقد يتعرّق الجسم ويرتعش.'},
+    {q:'لماذا يزداد عدد مرات التنفس عند <b>ممارسة الرياضة</b>؟',a:'ليحصل الجسم على كمية أكبر من الأكسجين اللازم لإنتاج الطاقة',w:['ليحصل الجسم على كمية أقل من الأكسجين','لأنّ الرئتين تتوقفان','لكي يبرد الجسم فقط'],why:'الأكسجين ضروري لحرق الغذاء المهضوم والحصول على الطاقة.'}],
+   cert:{title:'🏆 الشهادة الكبرى «صائد الدانة» 🏆', img:'dana', text:'أتمّ <b>رحلة الدانة</b> كاملة، وتعرّف على <b>تركيب جسم الإنسان</b>: الخلية، والوراثة، والجهاز الهضمي، والجهاز التنفسي، والجهاز الدوري، واستجابة الجسم للعوامل المختلفة. 👑'}
+ },
+];
+const FUTURE=[];
+
+/* =================== SAVE =================== */
+const SAVE_KEY='rehlat-aldana-v1';
+let SV={name:'',char:null,done:{},stars:{},pearls:{},unlockAll:false};
+try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(s)SV=Object.assign(SV,s)}catch(e){}
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(SV))}catch(e){}}
+const unlocked=i=> i===0 || SV.unlockAll || !!SV.done[STAGES[i-1].id];
+
+/* =================== STATE =================== */
+const G={char:SV.char,name:SV.name,pearls:0,si:0,lvl:0,hearts:3,got:0,mist:0,streak:0,stars:[],items:[],fx:[],t:0,spawnT:0,running:false,paused:false,
+         px:.5,targetX:.5,chainIdx:0,funcKey:'nuc',funcQueue:[],shake:0,wall:0,wallTotal:0,muted:false,keys:{},card:null,queue:[]};
+const ST=()=>STAGES[G.si], LV=()=>ST().levels[G.lvl];
+
+/* =================== AUDIO =================== */
+let AC=null;
+function ac(){ if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}} if(AC&&AC.state==='suspended')AC.resume(); return AC;}
+function tone(f,d,type='sine',v=.18,when=0,slide=0){ if(G.muted)return; const a=ac(); if(!a)return; const t=a.currentTime+when;
+  const o=a.createOscillator(),g=a.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g).connect(a.destination); o.start(t); o.stop(t+d+.02);}
+const BGM=$('#bgm'); BGM.volume=.35;
+const SFX={
+  ok(){tone(660,.12,'triangle');tone(990,.18,'triangle',.15,.08)},
+  combo(){[660,830,990,1320].forEach((f,i)=>tone(f,.14,'triangle',.14,i*.06))},
+  bad(){tone(220,.28,'sawtooth',.12,0,120)},
+  pearl(){[1200,1500,1800].forEach((f,i)=>tone(f,.1,'sine',.12,i*.05))},
+  whoosh(){tone(300,.16,'sine',.08,0,900)},
+  tick(){tone(880,.05,'square',.04)},
+  win(){BGM.volume=.12;setTimeout(()=>BGM.volume=.35,1400);[523,659,784,1046,784,1046].forEach((f,i)=>tone(f,.22,'triangle',.16,i*.13))},
+  click(){tone(500,.06,'square',.06)}
+};
+function music(on){ if(on&&!G.muted){const p=BGM.play();if(p&&p.catch)p.catch(()=>{})} else BGM.pause(); }
+
+/* =================== CANVAS =================== */
+const cv=$('#cv'),cx=cv.getContext('2d'); let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',resize);resize();
+const FONT='Tajawal,"Noto Kufi Arabic","Geeza Pro",Tahoma,sans-serif';
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function wrap(text,maxW){const words=text.split(' ');const lines=[];let cur='';for(const w of words){const t=cur?cur+' '+w:w;if(cx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w}else cur=t}if(cur)lines.push(cur);return lines}
+function fitText(t,w,h,maxFs){let fs=maxFs;cx.font=`800 ${fs}px ${FONT}`;let lines=wrap(t,w);while((lines.length>2||lines.length*fs*1.15>h)&&fs>11){fs-=1;cx.font=`800 ${fs}px ${FONT}`;lines=wrap(t,w)}
+  if(lines.length===1&&cx.measureText(lines[0]).width>w){fs=fs*w/cx.measureText(lines[0]).width;cx.font=`800 ${fs}px ${FONT}`}return {lines,fs}}
+
+function drawBg(){
+  const img=IMG[ST().bg]; if(img){const s=Math.max(W/img.width,H/img.height);const w=img.width*s,h=img.height*s;cx.drawImage(img,(W-w)/2,(H-h)/2+(G.shake?Math.sin(G.t*60)*G.shake:0),w,h)}
+  else{cx.fillStyle='#e9cf9c';cx.fillRect(0,0,W,H)}
+  cx.fillStyle='rgba(255,240,210,.12)';cx.fillRect(0,0,W,H);
+}
+function charBox(scale=1,lift=0){const h=Math.min(H*.26,230)*scale;const img=IMG[G.char];const w=img?h*img.width/img.height:h*.6;return {w,h,x:G.px*W-w/2,y:H-h-8-lift}}
+function drawChar(scale=1,lift=0){
+  const b=charBox(scale,lift); const img=IMG[G.char]; const bob=Math.sin(G.t*8)*(Math.abs(G.targetX-G.px)>.01?3:1);
+  cx.save();cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(b.x+b.w/2,b.y+b.h-2,b.w*.38,8,0,0,7);cx.fill();
+  if(img)cx.drawImage(img,b.x,b.y+bob,b.w,b.h);cx.restore();
+}
+function drawFx(dt){
+  G.fx=G.fx.filter(f=>(f.life-=dt)>0);
+  for(const f of G.fx){const a=Math.min(1,f.life/f.max*1.6);cx.save();cx.globalAlpha=a;
+    if(f.type==='txt'){cx.font=`900 ${f.size}px ${FONT}`;cx.textAlign='center';cx.direction='rtl';cx.lineWidth=5;cx.strokeStyle='rgba(59,36,18,.85)';const y=f.y-(f.max-f.life)*60;cx.strokeText(f.s,f.x,y);cx.fillStyle=f.c;cx.fillText(f.s,f.x,y)}
+    if(f.type==='p'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy+=500*dt;cx.fillStyle=f.c;cx.beginPath();cx.arc(f.x,f.y,f.r,0,7);cx.fill()}
+    if(f.type==='fact'){const w=Math.min(W*.9,520);cx.font=`700 ${Math.min(19,W*.045)}px ${FONT}`;cx.direction='rtl';cx.textAlign='center';
+      const lines=wrap(f.s,w-24);const lh=24;const h=lines.length*lh+18;const y=(f.y||H*.62)-h;rr(W/2-w/2,y,w,h,14);cx.fillStyle='rgba(31,138,158,.93)';cx.fill();
+      cx.fillStyle='#fff';lines.forEach((l,i)=>cx.fillText(l,W/2,y+20+i*lh))}
+    cx.restore();}
+}
+function burst(x,y,c,n=14){for(let i=0;i<n;i++)G.fx.push({type:'p',x,y,vx:(Math.random()-.5)*360,vy:-Math.random()*380-60,r:3+Math.random()*4,c,life:.9,max:.9})}
+function floatTxt(s,x,y,c='#ffd166',size=30){G.fx.push({type:'txt',s,x,y,c,size,life:1.1,max:1.1})}
+function fact(s,y){G.fx=G.fx.filter(f=>f.type!=='fact');G.fx.push({type:'fact',s,y,life:2.4,max:2.4})}
+
+/* =================== MODE: CATCH (stage 1) =================== */
+function brickSize(){const L=LV();const base=Math.min(W*.30,190);return L.wide?{w:Math.min(W*.42,250),h:Math.max(70,H*.095)}:{w:base,h:Math.max(52,Math.min(66,H*.075))}}
+function spawnCatch(){
+  const L=LV(); const b=brickSize(); const it=L.make(); const lanes=Math.max(2,Math.floor(W/(b.w+10)));
+  let lane,tries=0; do{lane=Math.floor(Math.random()*lanes);tries++}while(tries<6&&G.items.some(o=>o.lane===lane&&o.y<b.h*2.2));
+  const x=(W/lanes)*(lane+.5); const gold=!L.chain&&Math.random()<.07;
+  G.items.push(gold?{gold:true,x,y:-40,vy:(H*.22)*L.speed,lane,r:22}:{...it,x,y:-b.h,w:b.w,h:b.h,vy:(H*.16+40)*L.speed*(1+G.got*.025),rot:(Math.random()-.5)*.12,lane});
+}
+function drawWall(){
+  const bw=Math.min(26,W*.05),bh=bw*.55,cols=4,rows=Math.ceil(G.wallTotal/cols);const x0=10,y0=H*.5-rows*(bh+3)/2;
+  cx.save();rr(x0-6,y0-30,cols*(bw+3)+9,rows*(bh+3)+40,10);cx.fillStyle='rgba(255,248,236,.85)';cx.fill();
+  cx.font=`800 ${Math.max(11,bw*.5)}px ${FONT}`;cx.fillStyle='#8a5a2b';cx.textAlign='center';cx.fillText('البيت 🏠',x0+cols*(bw+3)/2-1,y0-12);
+  for(let i=0;i<rows*cols;i++){const r=rows-1-Math.floor(i/cols),c=i%cols;const x=x0+c*(bw+3),y=y0+r*(bh+3);
+    rr(x,y,bw,bh,3);cx.fillStyle=i<G.wall?'#c8955a':'rgba(138,90,43,.15)';cx.fill();if(i<G.wall){cx.strokeStyle='#8a5a2b';cx.lineWidth=1;cx.stroke()}}
+  cx.restore();
+}
+function drawBrick(o){
+  if(o.gold){cx.save();const g=cx.createRadialGradient(o.x-6,o.y-6,3,o.x,o.y,o.r);g.addColorStop(0,'#fffef5');g.addColorStop(.6,'#ffe9a8');g.addColorStop(1,'#e2a92a');
+    cx.fillStyle=g;cx.shadowColor='#ffd166';cx.shadowBlur=18;cx.beginPath();cx.arc(o.x,o.y,o.r,0,7);cx.fill();cx.restore();return}
+  cx.save();cx.translate(o.x,o.y);cx.rotate(o.rot);const w=o.w,h=o.h;
+  cx.shadowColor='rgba(0,0,0,.3)';cx.shadowBlur=8;cx.shadowOffsetY=4;
+  rr(-w/2,-h/2,w,h,10);const g=cx.createLinearGradient(0,-h/2,0,h/2);g.addColorStop(0,'#e6b67c');g.addColorStop(1,'#b97f45');cx.fillStyle=g;cx.fill();
+  cx.shadowColor='transparent';cx.strokeStyle='#7a4b20';cx.lineWidth=2.5;cx.stroke();
+  cx.fillStyle='rgba(122,75,32,.25)';for(let i=0;i<5;i++){cx.beginPath();cx.arc(-w/2+((i*37+o.lane*13)%w),-h/2+((i*23)%h),2,0,7);cx.fill()}
+  rr(-w/2+6,-h/2+6,w-12,h-12,7);cx.fillStyle='rgba(255,248,236,.92)';cx.fill();
+  cx.fillStyle='#3b2412';cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';
+  const {lines,fs}=fitText(o.t,w-20,h-14,Math.min(h*.36,22));
+  lines.forEach((l,i)=>cx.fillText(l,0,(i-(lines.length-1)/2)*fs*1.15));
+  cx.restore();
+}
+function updateCatch(dt){
+  if(G.keys.left)G.targetX-=dt*1.1; if(G.keys.right)G.targetX+=dt*1.1;
+  const b=charBox(); const half=(b.w/2)/W; G.targetX=Math.max(half,Math.min(1-half,G.targetX));
+  G.px+=(G.targetX-G.px)*Math.min(1,dt*14);
+  const L=LV(); G.spawnT-=dt; if(G.spawnT<=0){spawnCatch();G.spawnT=L.gap*(1-Math.min(.3,G.got*.03))}
+  const c=charBox(); const catchY=c.y+c.h*.32; const cl=c.x+c.w*.12, cr=c.x+c.w*.88;
+  for(const o of G.items){ o.y+=o.vy*dt; const hw=(o.gold?o.r:o.w/2*.75);
+    if(!o.done&&o.y>catchY-(o.gold?o.r:o.h/2)&&o.y<catchY+40&&o.x+hw>cl&&o.x-hw<cr){o.done=true;caughtCatch(o)}
+    if(o.y>H+80)o.done=true;}
+  G.items=G.items.filter(o=>!o.done);
+}
+function caughtCatch(o){
+  const L=LV();
+  if(o.gold){G.pearls+=3;SFX.pearl();floatTxt('+3 🦪 لؤلؤة ذهبية!',o.x,o.y,'#ffe08a',26);burst(o.x,o.y,'#ffe08a',20);updHud();return}
+  let ok=o.ok, why=o.why;
+  if(L.chain){const want=SEQ[G.chainIdx%4];ok=(o.t===want);
+    if(!ok)why=`ليس بعد! الترتيب الصحيح من الأصغر إلى الأكبر:<br><b>الخلية ← النسيج ← العضو ← الجهاز</b><br>الآن نحتاج: <b>${want}</b> (${ORDER_FACTS[want]}).`;}
+  if(ok){
+    good(o.x,o.y,'#e6b67c'); G.wall++;
+    if(L.chain){fact(`${o.t}: ${ORDER_FACTS[o.t]}`);G.chainIdx++;}
+    else if(L.func){fact(`✔ ${PARTS[o.k].n}: ${PARTS[o.k].f}`);nextFunc()}
+    else if(o.fact){fact(o.fact)}
+    else if(o.k){fact(`✔ ${PARTS[o.k].n}: ${PARTS[o.k].f}`)}
+    afterGood();
+  }else bad(o.t,why,o.x,o.y);
+}
+function nextFunc(){ if(!G.funcQueue.length)G.funcQueue=shuffle(Object.keys(PARTS)); G.funcKey=G.funcQueue.pop(); G.items=G.items.filter(o=>o.y>H*.5); setTask(); }
+
+/* =================== MODE: SORT (stage 2) =================== */
+function sortGeo(){const bw=Math.min(W*.28,160);return {bw,by:H-bw*.8-84,cw:Math.min(W*.74,380),ch:Math.max(78,Math.min(100,H*.12))}}
+function nextCard(){
+  const L=LV(); if(!G.queue.length)G.queue=shuffle(L.items);
+  const it=G.queue.pop(); const g=sortGeo();
+  G.card={...it,x:W/2,y:-g.ch,vy:(H*.075+28)*L.speed*(1+G.got*.04),state:'fall',tx:0,ty:0,a:0};
+}
+function decide(dir){ // dir: 'R' => inherited, 'L' => acquired
+  const c=G.card; if(!G.running||G.paused||!c||c.state!=='fall')return;
+  const g=sortGeo(); c.state='fly'; c.dir=dir; c.tx= dir==='R'? W-g.bw/2-8 : g.bw/2+8; c.ty=g.by+g.bw*.35; SFX.whoosh();
+  const ok=(dir==='R')===!!c.inh; c.ok=ok;
+}
+function updateSort(dt){
+  const c=G.card; if(!c){G.spawnT-=dt;if(G.spawnT<=0)nextCard();return}
+  const g=sortGeo();
+  if(c.state==='fall'){c.y+=c.vy*dt; if(c.y>g.by-g.ch*.2){ // timed out
+      c.state='gone'; G.streak=0; G.queue.unshift({t:c.t,e:c.e,inh:c.inh});
+      fact(`⏳ أسرع قليلًا! «${c.t}» صفة ${c.inh?'وراثية 🧬':'مكتسبة 📚'}`,H*.45); SFX.tick(); G.card=null; G.spawnT=.5; }}
+  else if(c.state==='fly'){c.a+=dt*3.2; const k=Math.min(1,c.a); c.x+= (c.tx-c.x)*Math.min(1,dt*9); c.y+=(c.ty-c.y)*Math.min(1,dt*9); c.sc=1-k*.7;
+    if(k>=1){ G.card=null; G.spawnT=.35;
+      if(c.ok){good(c.tx,c.ty-30,c.inh?'#ffd166':'#38b6c9'); G.boxes[c.inh?'R':'L']=(G.boxes[c.inh?'R':'L']||0)+1;
+        fact(c.inh?`🧬 «${c.t}» صفة وراثية: تنتقل من الآباء إلى الأبناء.`:`📚 «${c.t}» صفة مكتسبة: نتعلّمها أو نكتسبها من البيئة.`,H*.45); afterGood();}
+      else bad(c.t, c.inh?`«${c.t}» <b>صفة وراثية</b> 🧬: لم يتعلّمها الكائن الحي، بل <b>انتقلت إليه من والديه</b> عن طريق المادة الوراثية في النواة.`
+                           :`«${c.t}» <b>صفة مكتسبة</b> 📚: <b>نتعلّمها أو نكتسبها من البيئة</b>، ولا تنتقل من الوالدين إلى الأبناء.`, c.tx, c.ty);
+    }}
+}
+function drawSort(){
+  const g=sortGeo();
+  // boxes
+  const drawBox=(img,x,label,col,n)=>{cx.save();
+    if(img)cx.drawImage(img,x-g.bw/2,g.by,g.bw,g.bw*img.height/img.width);
+    cx.font=`900 ${Math.min(20,W*.045)}px ${FONT}`;cx.textAlign='center';cx.direction='rtl';
+    const tw=cx.measureText(label).width+22;rr(x-tw/2,g.by-34,tw,30,12);cx.fillStyle=col;cx.fill();cx.fillStyle='#fff';cx.fillText(label,x,g.by-12);
+    if(n){cx.font=`900 16px ${FONT}`;cx.fillStyle='#fff';rr(x+g.bw/2-34,g.by-6,30,24,10);cx.fillStyle='rgba(59,36,18,.8)';cx.fill();cx.fillStyle='#fff';cx.fillText(n,x+g.bw/2-19,g.by+11)}
+    cx.restore()};
+  drawBox(IMG.chest,W-g.bw/2-8,'وراثية 🧬','#d48a12',G.boxes.R);
+  drawBox(IMG.slate,g.bw/2+8,'مكتسبة 📚','#167a8c',G.boxes.L);
+  G.px=.5;G.targetX=.5;drawChar(.6,76);
+  const c=G.card; if(!c)return;
+  cx.save();cx.translate(c.x,c.y);const s=c.sc||1;cx.scale(s,s);
+  const w=g.cw,h=g.ch; cx.shadowColor='rgba(0,0,0,.3)';cx.shadowBlur=12;cx.shadowOffsetY=5;
+  rr(-w/2,-h/2,w,h,18);cx.fillStyle='#fff8ec';cx.fill();cx.shadowColor='transparent';cx.lineWidth=4;cx.strokeStyle='#c8955a';cx.stroke();
+  cx.font=`${Math.min(40,h*.45)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText(c.e,w/2-34,0);
+  cx.fillStyle='#3b2412';cx.direction='rtl';const {lines,fs}=fitText(c.t,w-90,h-16,Math.min(24,h*.32));
+  lines.forEach((l,i)=>cx.fillText(l,-22,(i-(lines.length-1)/2)*fs*1.15));
+  // swipe hint arrows
+  if(c.state==='fall'&&G.got<2){cx.globalAlpha=.55+.45*Math.sin(G.t*6);cx.font=`900 26px ${FONT}`;cx.fillStyle='#d48a12';cx.fillText('➡',w/2+22,0);cx.fillStyle='#167a8c';cx.fillText('⬅',-w/2-22,0)}
+  cx.restore();
+}
+
+/* =================== MODE: RUNNER (stage 3) =================== */
+function laneX(i){return W*(.2+.3*i)}
+function runnerY(){return Math.max(170,H*.34)}
+function makeGates(want){const others=shuffle(ORDER.filter(k=>k!==want)).slice(0,2);return shuffle([{k:want},{k:others[0]},{k:others[1]}])}
+function pendingRows(){return G.rows.filter(r=>!r.pearl&&!r.done).sort((a,b)=>a.y-b.y)}
+function spawnRow(){
+  // each new row gets the organ that will be needed when it arrives (counting the rows already waiting)
+  const want=ORDER[(G.chainIdx+pendingRows().length)%6];
+  G.rows.push({y:H+50,gates:makeGates(want),done:false});
+  if(Math.random()<.35)G.rows.push({y:H+50+H*.22,pearl:true,lane:Math.floor(Math.random()*3)});
+}
+function relabelRows(){ // keep every waiting row consistent with the next organ in order
+  pendingRows().forEach((r,i)=>{const want=ORDER[(G.chainIdx+i)%6]; if(!r.gates.some(g=>g.k===want))r.gates=makeGates(want)});
+}
+function updateRunner(dt){
+  G.laneX+= (laneX(G.lane)-G.laneX)*Math.min(1,dt*18);
+  const L=LV(); const v=(H*.13+28)*L.speed*(1+Math.min(G.got,10)*.03);
+  for(const r of G.rows)r.y-=v*dt;
+  const last=G.rows.filter(r=>!r.pearl).slice(-1)[0];
+  if(!last||last.y<H-Math.max(250,H*.45))spawnRow();
+  const py=runnerY();
+  for(const r of G.rows){ if(r.done)continue;
+    if(r.pearl){ if(r.y<=py+10){r.done=true; if(r.lane===G.lane){G.pearls++;SFX.pearl();floatTxt('+1 🦪',laneX(r.lane),py,'#fff',24);updHud()}} continue }
+    if(r.y<=py){ r.done=true; G.lane=Math.max(0,Math.min(2,G.lane|0)); const g=r.gates[G.lane], want=ORDER[G.chainIdx%6];
+      if(g.k===want){ good(laneX(G.lane),py,'#c56b4a'); fact(`✔ ${ORG[g.k].n}: ${ORG[g.k].f}`,runnerY()-Math.min(70,W*.15)*.9-8); G.chainIdx++; relabelRows();
+        if(G.chainIdx%6===0){floatTxt('🎉 اكتملت رحلة اللقمة!',W/2,H*.62,'#ffd166',30)} setTask(); afterGood(); }
+      else { const i=G.chainIdx%6; const msg = i===0? 'رحلة الطعام <b>تبدأ من الفم</b> 👄!' : `بعد «<b>${ORG[ORDER[i-1]].n}</b>» تذهب اللقمة إلى «<b>${ORG[want].n}</b>»!`;
+        // give the student room: push waiting rows down, then fix their labels
+        const pr=pendingRows(); if(pr.length){const d=Math.max(0,(py+H*.4)-pr[0].y); G.rows.forEach(z=>{if(!z.done)z.y+=d})} relabelRows();
+        bad(ORG[g.k].n, `${msg}<br>الترتيب: الفم ← المريء ← المعدة ← الأمعاء الدقيقة ← الأمعاء الغليظة ← الشرج.`, laneX(G.lane), py); }
+    }}
+  G.rows=G.rows.filter(r=>r.y>-80);
+}
+function drawDate(x,y,s){
+  cx.save();cx.translate(x,y);cx.rotate((laneX(G.lane)-G.laneX)/W*-1.2);
+  cx.shadowColor='rgba(0,0,0,.35)';cx.shadowBlur=10;cx.shadowOffsetY=4;
+  const g=cx.createRadialGradient(-s*.15,-s*.25,s*.1,0,0,s*.75);g.addColorStop(0,'#b5652f');g.addColorStop(1,'#5a2a12');
+  cx.fillStyle=g;cx.beginPath();cx.ellipse(0,0,s*.42,s*.62,0,0,7);cx.fill();cx.shadowColor='transparent';
+  cx.fillStyle='rgba(255,255,255,.25)';cx.beginPath();cx.ellipse(-s*.14,-s*.28,s*.08,s*.18,-.3,0,7);cx.fill();
+  cx.fillStyle='#3b5e2b';cx.beginPath();cx.ellipse(0,-s*.6,s*.12,s*.06,0,0,7);cx.fill();
+  for(const k of [-1,1]){cx.fillStyle='#fff';cx.beginPath();cx.arc(k*s*.14,-s*.04,s*.1,0,7);cx.fill();cx.fillStyle='#222';cx.beginPath();cx.arc(k*s*.14,-s*.02,s*.05,0,7);cx.fill()}
+  cx.strokeStyle='#fff';cx.lineWidth=s*.04;cx.beginPath();cx.arc(0,s*.12,s*.12,.15*Math.PI,.85*Math.PI);cx.stroke();
+  cx.restore();
+}
+function drawRunner(){
+  // tract
+  cx.save();cx.globalAlpha=.55;const tw=W*.9;rr(W/2-tw/2,runnerY()-90,tw,H-runnerY()+120,40);cx.fillStyle='#f6c9b8';cx.fill();cx.globalAlpha=1;
+  cx.strokeStyle='rgba(197,107,74,.35)';cx.lineWidth=3;cx.setLineDash([10,12]);
+  for(const k of [.35,.65]){cx.beginPath();cx.moveTo(W*k,runnerY()-80);cx.lineTo(W*k,H);cx.stroke()}cx.setLineDash([]);cx.restore();
+  const gw=Math.min(W*.28,200), gh=Math.max(52,Math.min(66,H*.075));
+  for(const r of G.rows){
+    if(r.pearl){ if(r.done)continue; const x=laneX(r.lane);cx.save();const g=cx.createRadialGradient(x-5,r.y-5,2,x,r.y,16);g.addColorStop(0,'#fff');g.addColorStop(1,'#e8d7a8');cx.fillStyle=g;cx.shadowColor='#ffd166';cx.shadowBlur=14;cx.beginPath();cx.arc(x,r.y,14,0,7);cx.fill();cx.restore();continue}
+    r.gates.forEach((g,i)=>{const x=laneX(i);cx.save();
+      cx.globalAlpha=r.done?Math.max(0,1-(runnerY()-r.y)/120):1;
+      rr(x-gw/2,r.y-gh/2,gw,gh,14);cx.fillStyle='#8a5a2b';cx.fill();
+      rr(x-gw/2+5,r.y-gh/2+5,gw-10,gh-10,10);cx.fillStyle='#fff8ec';cx.fill();
+      cx.fillStyle='#3b2412';cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';
+      const {lines,fs}=fitText(ORG[g.k].n,gw-20,gh-14,Math.min(22,gh*.38));lines.forEach((l,j)=>cx.fillText(l,x,r.y+(j-(lines.length-1)/2)*fs*1.15));
+      cx.restore()});
+  }
+  const s=Math.min(70,W*.15); drawDate(G.laneX,runnerY(),s);
+  cx.save();cx.font=`800 15px ${FONT}`;cx.textAlign='center';cx.direction='rtl';cx.fillStyle='#fff';cx.strokeStyle='rgba(59,36,18,.8)';cx.lineWidth=4;
+  cx.strokeText('اللقمة',G.laneX,runnerY()-s*.75);cx.fillText('اللقمة',G.laneX,runnerY()-s*.75);cx.restore();
+}
+function moveLane(d){ if(!G.running||G.paused)return; G.lane=Math.max(0,Math.min(2,G.lane+d)); SFX.click(); }
+
+/* =================== MODE: FISH (stage 3) =================== */
+const FISHCOL=['#f28b30','#3fa7d6','#e85d75','#8bc34a','#f2c230','#9b6dd6'];
+function fishGeo(){return {w:Math.min(W*.62,330),h:Math.max(60,Math.min(76,H*.085))}}
+function fishLanes(){const top=Math.max(190,H*.33),bot=H-90;const n=4;return [...Array(n)].map((_,i)=>top+(bot-top)*i/(n-1))}
+function spawnFish(){
+  const g=fishGeo(), lanes=fishLanes(); const want=G.wantOrg;
+  const hasWant=G.fish.some(f=>f.k===want);
+  const k= (!hasWant&&Math.random()<.75)? want : pick(ORDER);
+  const free=lanes.map((y,i)=>i).filter(i=>!G.fish.some(f=>f.lane===i&&(f.dir>0?f.x<g.w*.9:f.x>W-g.w*.9)));
+  if(!free.length)return; const lane=pick(free); const dir=lane%2?1:-1;
+  G.fish.push({k,lane,dir,y:lanes[lane],x:dir>0?-g.w/2:W+g.w/2,v:(50+Math.random()*30)*(1+G.got*.08)*(W>700?1.4:1),col:pick(FISHCOL),ph:Math.random()*6});
+}
+function updateFish(dt){
+  G.spawnT-=dt; if(G.spawnT<=0){spawnFish();G.spawnT=.9+Math.random()*.6}
+  const g=fishGeo(); for(const f of G.fish){f.x+=f.dir*f.v*dt;f.ph+=dt*6}
+  G.fish=G.fish.filter(f=>f.x>-g.w&&f.x<W+g.w);
+}
+function drawFishOne(f){
+  const g=fishGeo(), w=g.w, h=g.h, y=f.y+Math.sin(f.ph)*3;
+  cx.save();cx.translate(f.x,y);if(f.dir<0)cx.scale(-1,1);
+  cx.shadowColor='rgba(0,0,0,.25)';cx.shadowBlur=8;cx.shadowOffsetY=4;
+  cx.fillStyle=f.col;cx.beginPath();cx.moveTo(-w/2+6,0);cx.lineTo(-w/2-26,-h*.45+Math.sin(f.ph)*4);cx.lineTo(-w/2-26,h*.45+Math.sin(f.ph)*4);cx.closePath();cx.fill();
+  cx.beginPath();cx.ellipse(0,0,w/2,h/2+6,0,0,7);cx.fill();cx.shadowColor='transparent';
+  cx.fillStyle='#fff';cx.beginPath();cx.arc(w/2-20,-h*.12,7,0,7);cx.fill();cx.fillStyle='#222';cx.beginPath();cx.arc(w/2-18,-h*.12,3.5,0,7);cx.fill();
+  cx.restore();
+  // label (unflipped)
+  cx.save();const lw=w-70, lh=h-14; rr(f.x-lw/2-(f.dir>0?8:-8),y-lh/2,lw,lh,12);cx.fillStyle='rgba(255,255,255,.93)';cx.fill();
+  cx.fillStyle='#3b2412';cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';
+  const {lines,fs}=fitText(ORG[f.k].f,lw-14,lh-6,Math.min(18,lh*.4));lines.forEach((l,j)=>cx.fillText(l,f.x-(f.dir>0?8:-8),y+(j-(lines.length-1)/2)*fs*1.15));
+  cx.restore();
+}
+function drawFish(){
+  // gentle waves
+  cx.save();cx.strokeStyle='rgba(255,255,255,.25)';cx.lineWidth=2;for(const y of fishLanes()){cx.beginPath();for(let x=0;x<=W;x+=20)cx.lineTo(x,y+fishGeo().h*.75+Math.sin(x/40+G.t*2)*3);cx.stroke()}cx.restore();
+  G.fish.forEach(drawFishOne);
+  G.px=.88;drawChar(.5);
+}
+function nextOrg(){ if(!G.orgQueue.length)G.orgQueue=shuffle(ORDER); G.wantOrg=G.orgQueue.pop(); setTask(); }
+function tapFish(x,y){
+  const g=fishGeo(); const f=G.fish.slice().reverse().find(f=>Math.abs(x-f.x)<g.w/2+10&&Math.abs(y-f.y)<g.h/2+10);
+  G.fx.push({type:'p',x,y,vx:0,vy:0,r:10,c:'rgba(255,255,255,.6)',life:.3,max:.3});
+  if(!f)return; const want=G.wantOrg;
+  if(f.k===want){ G.fish=G.fish.filter(z=>z!==f); good(f.x,f.y,'#3fa7d6'); fact(`🎣 ${ORG[want].n}: ${ORG[want].f}`,fishLanes()[0]-fishGeo().h/2-8); nextOrg(); afterGood(); }
+  else bad(null,`هذه السمكة تحمل وظيفة «<b>${ORG[f.k].n}</b>»: ${ORG[f.k].f}.<br>أمّا <b>${ORG[want].n}</b> فوظيفته: ${ORG[want].f}.`,f.x,f.y);
+}
+
+/* =================== MODE: DIVE (stage 4) =================== */
+function surfY(){return Math.max(165,H*.22)}
+function floorY(){return H-46}
+function newOyster(slot){
+  const isGood=Math.random()<.55; let it;
+  if(isGood){const k=pick(Object.keys(RESP));it={t:RESP[k].n,ok:1,k,sys:null,bad:0}} else {const d=pick(NOTRESP);it={t:d.n,ok:0,k:null,sys:d.s,bad:0}}
+  const n=G.oyN, sw=(W-40)/n; const x=20+sw*(slot+.5)+(Math.random()-.5)*sw*.25;
+  const y=floorY()-(slot%2?Math.min(78,H*.09):6)-Math.random()*10;
+  return {...it,slot,x,y,open:0,t0:0};
+}
+function initDive(){G.oyN=W<520?4:5;G.oys=[];for(let i=0;i<G.oyN;i++)G.oys.push(newOyster(i));
+  if(!G.oys.some(o=>o.ok)){const k=pick(Object.keys(RESP));Object.assign(G.oys[0],{t:RESP[k].n,ok:1,k,sys:null})}
+  G.dv={x:W/2,y:surfY()+40,tx:W/2,ty:surfY()+60,dir:1};G.air=1;G.airWarn=0;}
+function updateDive(dt){
+  const d=G.dv, sp=Math.max(W,H)*.55;
+  if(G.keys.left)d.tx-=sp*dt; if(G.keys.right)d.tx+=sp*dt; if(G.keys.up)d.ty-=sp*dt; if(G.keys.down)d.ty+=sp*dt;
+  d.tx=Math.max(40,Math.min(W-40,d.tx)); d.ty=Math.max(surfY()-10,Math.min(floorY()-20,d.ty));
+  const dx=d.tx-d.x, dy=d.ty-d.y, dist=Math.hypot(dx,dy), mv=Math.min(dist,sp*.75*dt);
+  if(dist>1){d.x+=dx/dist*mv;d.y+=dy/dist*mv; if(Math.abs(dx)>4)d.dir=dx>0?1:-1}
+  if(d.y<surfY()+18){ if(G.air<.6&&!G.breathMsg){G.breathMsg=1;floatTxt('شهيق 🌬️',d.x,d.y-20,'#fff',26);fact('🌬️ شهيق! ينخفض الحجاب الحاجز، فيزداد حجم الرئتين ويدخل الهواء إليهما.',surfY()+90)}
+    G.air=Math.min(1,G.air+dt*1.2); G.airWarn=0; }
+  else { G.breathMsg=0; G.air-=dt/(W>700?22:19); if(G.air<.28&&!G.airWarn){G.airWarn=1;SFX.tick();floatTxt('⚠️ الهواء يقلّ! اصعد للسطح',W/2,H*.5,'#ffd166',24)} }
+  if(G.air<=0){ G.air=1; d.x=d.tx=W/2; d.y=surfY()+10; d.ty=surfY()+40;
+    bad(null,'نفد الهواء! 😮‍💨 سحبك السَّيْب إلى السطح.<br>الإنسان لا يستطيع العيش دون <b>الأكسجين</b>، فهو ضروري لبقاء الكائنات الحية. اصعد إلى السطح لتأخذ شهيقًا <b>قبل</b> أن ينفد الهواء!',W/2,surfY());return}
+  for(const o of G.oys){
+    if(o.open){o.t0+=dt; if(o.t0>1.1){Object.assign(o,newOyster(o.slot))}; continue}
+    if(Math.hypot(o.x-d.x,(o.y-14)-d.y)<Math.min(60,W*.12)){ o.open=1;o.t0=0;
+      if(o.ok){good(o.x,o.y-30,'#fffbe6'); fact(`🦪 ${RESP[o.k].n}: ${RESP[o.k].f}`,surfY()+90); afterGood()}
+      else { o.bad=1; d.ty=Math.min(d.ty,o.y-110); d.y=Math.min(d.y,o.y-90);
+        bad(o.t,`«${o.t}» من أعضاء <b>${o.sys}</b>، وليست من الجهاز التنفسي!<br>أعضاء الجهاز التنفسي: <b>الأنف، القصبة الهوائية، الرئتان، الحجاب الحاجز</b>.`,o.x,o.y); }
+      if(!G.oys.some(z=>z.ok&&!z.open)){const z=G.oys.find(z=>!z.open);if(z){const k=pick(Object.keys(RESP));Object.assign(z,{t:RESP[k].n,ok:1,k,sys:null})}}
+    }}
+}
+function drawOyster(o){
+  const s=Math.min(46,W*.1); cx.save();cx.translate(o.x,o.y);
+  cx.shadowColor='rgba(0,0,0,.3)';cx.shadowBlur=8;cx.fillStyle='#9c8b7a';cx.beginPath();cx.ellipse(0,0,s,s*.55,0,0,7);cx.fill();cx.shadowColor='transparent';
+  cx.strokeStyle='#6f6052';cx.lineWidth=2;for(let i=-2;i<=2;i++){cx.beginPath();cx.moveTo(i*s*.3,-s*.5);cx.quadraticCurveTo(i*s*.35,0,i*s*.25,s*.5);cx.stroke()}
+  if(o.open){cx.fillStyle='#d9c9b6';cx.beginPath();cx.ellipse(0,-s*.6,s,s*.45,0,Math.PI,0);cx.fill();
+    if(o.ok&&!o.bad){const g=cx.createRadialGradient(-4,-s*.2-4,2,0,-s*.2,s*.3);g.addColorStop(0,'#fff');g.addColorStop(1,'#e9dcc0');cx.fillStyle=g;cx.shadowColor='#fff';cx.shadowBlur=16;cx.beginPath();cx.arc(0,-s*.2,s*.28,0,7);cx.fill()}}
+  cx.restore();
+  if(!o.open){ cx.save(); cx.font=`800 ${Math.min(17,W*.038)}px ${FONT}`;cx.direction='rtl';cx.textAlign='center';cx.textBaseline='middle';
+    const tw=cx.measureText(o.t).width+14; rr(o.x-tw/2,o.y-s*.55-34,tw,28,10);cx.fillStyle='rgba(255,248,236,.95)';cx.fill();cx.strokeStyle='#c8955a';cx.lineWidth=2;cx.stroke();
+    cx.fillStyle='#3b2412';cx.fillText(o.t,o.x,o.y-s*.55-20);cx.restore(); }
+}
+function drawDive(){
+  const d=G.dv; cx.save();cx.strokeStyle='rgba(120,90,50,.85)';cx.lineWidth=3;cx.beginPath();cx.moveTo(W*.5,0);cx.quadraticCurveTo(W*.5,d.y*.5,d.x,d.y);cx.stroke();cx.restore();
+  cx.save();cx.strokeStyle='rgba(255,255,255,.6)';cx.lineWidth=3;cx.setLineDash([12,10]);cx.beginPath();cx.moveTo(0,surfY());cx.lineTo(W,surfY());cx.stroke();cx.setLineDash([]);
+  cx.font=`800 14px ${FONT}`;cx.fillStyle='#fff';cx.strokeStyle='rgba(15,61,74,.7)';cx.lineWidth=4;cx.textAlign='right';cx.direction='rtl';cx.strokeText('🌬️ السطح: خذ شهيقًا هنا',W-12,surfY()-8);cx.fillText('🌬️ السطح: خذ شهيقًا هنا',W-12,surfY()-8);cx.restore();
+  G.oys.forEach(drawOyster);
+  if(!G.paused&&Math.random()<.08)G.fx.push({type:'p',x:d.x+d.dir*20,y:d.y-10,vx:(Math.random()-.5)*20,vy:-120,r:2+Math.random()*3,c:'rgba(255,255,255,.7)',life:1,max:1});
+  const img=IMG.diver; const w=Math.min(150,W*.32), h=img?w*img.height/img.width:w*.6;
+  cx.save();cx.translate(d.x,d.y);if(d.dir<0)cx.scale(-1,1);cx.rotate(Math.max(-.5,Math.min(.5,(d.ty-d.y)/300)));
+  if(img)cx.drawImage(img,-w/2,-h/2,w,h);cx.restore();
+  const mh=Math.min(220,H*.3), mx=14, my=H*.55-mh/2; cx.save();
+  rr(mx-4,my-34,36,mh+40,14);cx.fillStyle='rgba(255,248,236,.9)';cx.fill();
+  cx.font='20px '+FONT;cx.textAlign='center';cx.fillText('🫁',mx+14,my-12);
+  rr(mx+4,my,20,mh,8);cx.fillStyle='rgba(0,0,0,.15)';cx.fill();
+  const ah=mh*Math.max(0,G.air); if(ah>2){rr(mx+4,my+mh-ah,20,ah,8);cx.fillStyle=G.air<.28?(Math.sin(G.t*12)>0?'#d4543c':'#f2a91f'):'#38b6c9';cx.fill();}cx.restore();
+}
+
+/* =================== MODE: BUBBLE (stage 4) =================== */
+function bubR(){return Math.min(W*.19,92)}
+function lungBox(){const big=W>700;const sz=big?Math.min(130,H*.2):Math.min(64,W*.16);return {sz,x:big?W*.13:W-sz*.85,y:big?H*.55:surfY()+sz*1.05,big}}
+function spawnBubble(){
+  const want=G.bmode, other=want==='in'?'out':'in'; const ok=Math.random()<.5; const ph=ok?want:other;
+  const r=bubR(); const L=lungBox(); const minX=L.big?W*.27+r:r+6, maxX=W-r-6; let x,tries=0;
+  do{x=minX+Math.random()*Math.max(1,maxX-minX);tries++}while(tries<12&&G.bubs.some(b=>Math.abs(b.x-x)<r*1.9&&b.y>H-r*3));
+  G.bubs.push({t:pick(BUB[ph]),ph,x,y:H+r,r,ph0:Math.random()*6,v:(H*.075+25)*(1+G.got*.05)});
+}
+function updateBubble(dt){
+  G.spawnT-=dt; if(G.spawnT<=0){spawnBubble();G.spawnT=1.35}
+  for(const b of G.bubs){b.y-=b.v*dt;b.ph0+=dt*2}
+  G.bubs=G.bubs.filter(b=>b.y>surfY()-b.r*.2);
+  G.lungS+=(G.lungT-G.lungS)*Math.min(1,dt*4);
+}
+function drawLungs(){
+  const {sz,x,y}=lungBox(); const k=.85+.3*G.lungS; cx.save();cx.translate(x,y);
+  rr(-sz*.75,-sz*.95,sz*1.5,sz*1.95,18);cx.fillStyle='rgba(255,248,236,.92)';cx.fill();
+  cx.strokeStyle='#e9a3a0';cx.lineWidth=sz*.08;cx.lineCap='round';cx.beginPath();cx.moveTo(0,-sz*.75);cx.lineTo(0,-sz*.35);cx.lineTo(-sz*.2,-sz*.2);cx.moveTo(0,-sz*.35);cx.lineTo(sz*.2,-sz*.2);cx.stroke();
+  cx.fillStyle='#e97f86';for(const s of [-1,1]){cx.beginPath();cx.ellipse(s*sz*.3,sz*.05,sz*.24*k,sz*.42*k,0,0,7);cx.fill()}
+  const dy=sz*.5+G.lungS*sz*.12;
+  cx.strokeStyle='#8a5a2b';cx.lineWidth=sz*.07;cx.beginPath();cx.moveTo(-sz*.62,dy+sz*.1);cx.quadraticCurveTo(0,dy-sz*(.35-.3*G.lungS),sz*.62,dy+sz*.1);cx.stroke();
+  cx.font=`800 ${Math.max(10,sz*.13)}px ${FONT}`;cx.fillStyle='#3b2412';cx.textAlign='center';cx.direction='rtl';
+  cx.fillText('الرئتان',0,-sz*.8);cx.fillText('الحجاب الحاجز',0,dy+sz*.32);
+  cx.restore();
+}
+function drawBubble(){
+  for(const b of G.bubs){const x=b.x+Math.sin(b.ph0)*8;cx.save();
+    const g=cx.createRadialGradient(x-b.r*.35,b.y-b.r*.35,b.r*.1,x,b.y,b.r);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.7,'rgba(220,245,255,.88)');g.addColorStop(1,'rgba(160,220,240,.92)');
+    cx.fillStyle=g;cx.beginPath();cx.arc(x,b.y,b.r,0,7);cx.fill();cx.strokeStyle='rgba(255,255,255,.95)';cx.lineWidth=2.5;cx.stroke();
+    cx.fillStyle='#0f3d4a';cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';const {lines,fs}=fitText(b.t,b.r*1.5,b.r*1.2,Math.min(18,b.r*.28));
+    lines.forEach((l,j)=>cx.fillText(l,x,b.y+(j-(lines.length-1)/2)*fs*1.15));cx.restore();}
+  drawLungs();
+}
+function setBMode(m){G.bmode=m;setTask();floatTxt(m==='in'?'الآن: الشهيق 🌬️':'الآن: الزفير 💨',W/2,H*.45,'#ffd166',30)}
+function tapBubble(x,y){
+  const b=G.bubs.slice().reverse().find(b=>Math.hypot(b.x+Math.sin(b.ph0)*8-x,b.y-y)<b.r); if(!b)return;
+  G.bubs=G.bubs.filter(z=>z!==b);
+  for(let i=0;i<10;i++)G.fx.push({type:'p',x:b.x,y:b.y,vx:(Math.random()-.5)*300,vy:(Math.random()-.5)*300,r:3,c:'rgba(255,255,255,.9)',life:.5,max:.5});
+  if(b.ph===G.bmode){ G.lungT=b.ph==='in'?1:0; good(b.x,b.y,'#bfefff'); fact(b.ph==='in'?`🌬️ شهيق: ${b.t}`:`💨 زفير: ${b.t}`,surfY()+80);
+    G.bcount++; if(G.bcount%2===0&&G.got<LV().need)setBMode(G.bmode==='in'?'out':'in'); afterGood(); }
+  else bad(b.t,`«${b.t}» يحدث أثناء <b>${b.ph==='in'?'الشهيق':'الزفير'}</b>!<br>🌬️ <b>الشهيق</b>: ينخفض الحجاب الحاجز ← يزداد حجم الرئتين ← يدخل الهواء.<br>💨 <b>الزفير</b>: يرتفع الحجاب الحاجز ← يقلّ حجم الرئتين ← يخرج الهواء.`,b.x,b.y);
+}
+
+/* =================== MODE: MATCH (stage 4) =================== */
+function startBoard(){
+  const B=BOARDS[G.board]; const left=shuffle(B.pairs.map((p,i)=>({t:p[1],i}))); const right=B.pairs.map((p,i)=>({t:p[0],i}));
+  $('#famBox').innerHTML=`<div style="font-weight:900;font-size:clamp(17px,4.6vw,22px);margin-bottom:8px">🪢 ${B.title} <span style="opacity:.6;font-size:.8em">(${G.board+1}/${BOARDS.length})</span></div>
+   <div class="mcols"><div class="mcol">${right.map(r=>`<button class="mbtn term" data-i="${r.i}">${r.t}</button>`).join('')}</div>
+   <div class="mcol">${left.map(l=>`<button class="mbtn def" data-i="${l.i}">${l.t}</button>`).join('')}</div></div>`;
+  G.msel=null;
+  document.querySelectorAll('.mbtn.term').forEach(b=>b.onclick=()=>{ if(G.paused||b.classList.contains('done'))return; SFX.click();
+    document.querySelectorAll('.mbtn.term').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); G.msel=b; });
+  document.querySelectorAll('.mbtn.def').forEach(b=>b.onclick=()=>{ if(G.paused||b.classList.contains('done'))return;
+    const r=b.getBoundingClientRect();
+    if(!G.msel){floatTxt('اختر الكلمة أولًا ☝️',r.left+r.width/2,r.top,'#fff',20);return}
+    const t=G.msel;
+    if(+t.dataset.i===+b.dataset.i){ t.classList.remove('sel'); t.classList.add('done'); b.classList.add('done'); G.matchCol++;
+      t.style.background=b.style.background=['#ffd166','#9be7c4','#b9d6ff','#f8c2d4'][G.matchCol%4]; G.msel=null; good(r.left+r.width/2,r.top,'#ffd166');
+      if(document.querySelectorAll('.mbtn.term:not(.done)').length===0){ if(G.got>=LV().need)afterGood(); else { G.board++; setTimeout(()=>{if(G.running)startBoard()},700) } } }
+    else { const B=BOARDS[G.board]; const correct=B.pairs[+t.dataset.i][1]; t.classList.remove('sel'); G.msel=null;
+      bad(t.textContent,`ليست هذه! «<b>${t.textContent}</b>»: ${correct}.`,r.left+r.width/2,r.top); }
+  });
+}
+
+/* =================== MODE: VOYAGE (stage 5) =================== */
+function mapBox(){const top=Math.max(W<520?250:225,H*.3), bot=H-(W<520?150:100); return {x:12,y:top,w:W-24,h:bot-top}}
+function vgeo(){const m=mapBox(); const heart={x:m.x+m.w/2,y:m.y+m.h*.58};
+  const isl=[{n:'الرأس',e:'🧠',x:m.x+m.w/2,y:m.y+m.h*.13},{n:'اليد',e:'✋',x:m.x+m.w*.13,y:m.y+m.h*.72},{n:'القدم',e:'🦶',x:m.x+m.w*.87,y:m.y+m.h*.82}];
+  return {m,heart,isl};}
+function vpath(i,kind){ // returns bezier control for artery ('a') or vein ('v')
+  const g=vgeo(), a=g.heart, b=g.isl[i]; const mx=(a.x+b.x)/2,my=(a.y+b.y)/2; const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1;
+  const off=Math.min(70,l*.3)*(kind==='a'?1:-1); return {a,b,c:{x:mx-dy/l*off,y:my+dx/l*off}};}
+function bez(p,t){const u=1-t;return {x:u*u*p.a.x+2*u*t*p.c.x+t*t*p.b.x,y:u*u*p.a.y+2*u*t*p.c.y+t*t*p.b.y}}
+function initVoyage(){G.vq=shuffle([0,1,2]);G.vs={isl:G.vq[0],phase:'heart',anim:null,cargo:'full'};}
+function vChoose(c){
+  if(!G.running||G.paused||G.vs.anim)return; const v=G.vs, I=vgeo().isl[v.isl].n;
+  const ok=(v.phase==='heart'&&c==='art')||(v.phase==='atFull'&&c==='cap')||(v.phase==='atWaste'&&c==='vein');
+  if(ok){ SFX.whoosh();
+    if(c==='art'){v.anim={kind:'a',t:0,dir:1,next:'atFull'};fact('🔴 الشريان: ينقل الدم من القلب إلى أجزاء الجسم.',mapBox().y-6)}
+    if(c==='cap'){v.anim={kind:'x',t:0,next:'atWaste'};fact('🔄 الشعيرات الدموية: فيها يحدث تبادل المواد بين الدم وأجزاء الجسم.',mapBox().y-6)}
+    if(c==='vein'){v.anim={kind:'v',t:0,dir:-1,next:'heart'};fact('🔵 الوريد: ينقل الدم من أجزاء الجسم إلى القلب.',mapBox().y-6)}
+    const g=vgeo(); const p=v.phase==='heart'?g.heart:g.isl[v.isl]; good(p.x,p.y-20,'#e74c3c');
+  } else {
+    let why='';
+    if(v.phase==='heart') why = c==='vein' ? '<b>الوريد</b> ينقل الدم <b>من أجزاء الجسم إلى القلب</b>!<br>للخروج من القلب إلى أجزاء الجسم نستخدم <b>الشريان</b> 🔴.' : 'تبادل المواد يحدث عند أجزاء الجسم في <b>الشعيرات الدموية</b>، وليس في القلب.<br>أولًا: انطلق من القلب عبر <b>الشريان</b> 🔴.';
+    else if(v.phase==='atFull') why = `وصلت إلى «${I}»! الآن سلّم الأكسجين والغذاء وخذ الفضلات… وهذا يحدث في <b>الشعيرات الدموية</b> 🔄: فيها يحدث تبادل المواد بين الدم وأجزاء الجسم.`;
+    else why = c==='art' ? '<b>الشريان</b> ينقل الدم <b>من القلب إلى أجزاء الجسم</b>.<br>للعودة إلى القلب نستخدم <b>الوريد</b> 🔵.' : 'تمّ تبادل المواد! الآن عُد إلى القلب عبر <b>الوريد</b> 🔵.';
+    const g=vgeo(); const p=v.phase==='heart'?g.heart:g.isl[v.isl]; bad(null,why,p.x,p.y);
+  }
+}
+function updateVoyage(dt){
+  const v=G.vs; if(!v.anim)return; v.anim.t+=dt/(v.anim.kind==='x'?.9:1.5);
+  if(v.anim.kind==='x'&&Math.random()<.5){const p=vgeo().isl[v.isl];G.fx.push({type:'p',x:p.x+(Math.random()-.5)*40,y:p.y,vx:(Math.random()-.5)*120,vy:-Math.random()*160,r:3,c:Math.random()<.5?'#e74c3c':'#7a6a55',life:.6,max:.6})}
+  if(v.anim.t>=1){ v.phase=v.anim.next;
+    if(v.anim.kind==='x')v.cargo='waste';
+    if(v.phase==='heart'){ v.cargo='full'; G.vq.push(G.vq.shift()); v.isl=G.vq[0]; floatTxt('❤️ القلب يضخّ الدم من جديد!',vgeo().heart.x,vgeo().heart.y-50,'#fff',22); }
+    v.anim=null; setTask(); afterGood(); }
+}
+function shipPos(){const v=G.vs,g=vgeo(); if(v.anim&&(v.anim.kind==='a'||v.anim.kind==='v')){const p=vpath(v.isl,v.anim.kind);const t=Math.min(1,v.anim.t);return bez(p,v.anim.kind==='a'?t:1-t)}
+  return v.phase==='heart'?{x:g.heart.x,y:g.heart.y+34}:{x:g.isl[v.isl].x,y:g.isl[v.isl].y+30}}
+function drawShip(x,y,cargo){cx.save();cx.translate(x,y+Math.sin(G.t*4)*2);
+  cx.fillStyle='#7a4b20';cx.beginPath();cx.moveTo(-22,0);cx.lineTo(22,0);cx.lineTo(15,10);cx.lineTo(-15,10);cx.closePath();cx.fill();
+  cx.strokeStyle='#5a3a1a';cx.lineWidth=2;cx.beginPath();cx.moveTo(0,0);cx.lineTo(0,-30);cx.stroke();
+  cx.fillStyle=cargo==='full'?'#e74c3c':'#8e7d6a';cx.beginPath();cx.moveTo(2,-30);cx.lineTo(22,-4);cx.lineTo(2,-4);cx.closePath();cx.fill();
+  cx.font='16px '+FONT;cx.textAlign='center';cx.fillText(cargo==='full'?'🫁🍞':'🗑️',-10,-12);cx.restore();}
+function drawVoyage(){
+  const g=vgeo(), m=g.m; cx.save();
+  rr(m.x,m.y,m.w,m.h,22);cx.fillStyle='rgba(244,228,193,.94)';cx.fill();cx.strokeStyle='#8a5a2b';cx.lineWidth=4;cx.stroke();
+  // paths
+  g.isl.forEach((s,i)=>{for(const k of ['a','v']){const p=vpath(i,k);cx.strokeStyle=k==='a'?'rgba(214,48,49,.85)':'rgba(41,98,201,.85)';cx.lineWidth=i===G.vs.isl?7:4;cx.setLineDash(i===G.vs.isl?[]:[8,8]);
+    cx.beginPath();cx.moveTo(p.a.x,p.a.y);cx.quadraticCurveTo(p.c.x,p.c.y,p.b.x,p.b.y);cx.stroke();cx.setLineDash([]);
+    if(i===G.vs.isl){const q=bez(p,.5);cx.font=`800 ${Math.min(14,W*.034)}px ${FONT}`;cx.direction='rtl';cx.textAlign='center';const lab=k==='a'?'شريان':'وريد';const tw=cx.measureText(lab).width+12;
+      rr(q.x-tw/2,q.y-11,tw,22,8);cx.fillStyle=k==='a'?'#d63031':'#2962c9';cx.fill();cx.fillStyle='#fff';cx.fillText(lab,q.x,q.y+5)}}});
+  // islands
+  g.isl.forEach((s,i)=>{cx.save();cx.fillStyle=i===G.vs.isl?'#f7d794':'#ead7b0';cx.strokeStyle='#8a5a2b';cx.lineWidth=3;cx.beginPath();cx.arc(s.x,s.y,Math.min(34,W*.08),0,7);cx.fill();cx.stroke();
+    cx.font=`${Math.min(28,W*.065)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText(s.e,s.x,s.y);
+    cx.font=`900 ${Math.min(16,W*.038)}px ${FONT}`;cx.fillStyle='#3b2412';cx.direction='rtl';cx.fillText(s.n,s.x,s.y-Math.min(34,W*.08)-12);cx.restore()});
+  // heart
+  const beat=1+.08*Math.max(0,Math.sin(G.t*7)); cx.save();cx.translate(g.heart.x,g.heart.y);cx.scale(beat,beat);cx.font=`${Math.min(56,W*.13)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText('❤️',0,0);cx.restore();
+  cx.save();cx.font=`900 ${Math.min(16,W*.038)}px ${FONT}`;cx.fillStyle='#b71c1c';cx.textAlign='center';cx.direction='rtl';cx.fillText('القلب (الميناء)',g.heart.x,g.heart.y+Math.min(56,W*.13)*.75);cx.restore();
+  const sp=shipPos(); drawShip(sp.x,sp.y,G.vs.cargo);
+  cx.restore();
+}
+
+/* =================== MODE: CREW (stage 5) =================== */
+const CREW={red:{n:'خلايا الدم الحمراء',e:'🔴',f:'تنقل الأكسجين والغذاء المهضوم، وتنقل الفضلات للتخلص منها'},white:{n:'خلايا الدم البيضاء',e:'⚪',f:'تهاجم الجراثيم لحماية الجسم من الأمراض'},
+  plt:{n:'الصفائح الدموية',e:'🟡',f:'تساعد على تجلّط الدم لالتئام الجروح'},plasma:{n:'البلازما',e:'💧',f:'الجزء السائل من الدم الذي تسبح فيه باقي المكوّنات'}};
+const EVENTS=[{e:'😮‍💨',t:'البحّار متعب ويحتاج إلى الأكسجين!',c:'red'},{e:'🍞',t:'عضلات البحّار تحتاج إلى الغذاء المهضوم',c:'red'},{e:'🗑️',t:'يجب نقل الفضلات للتخلّص منها',c:'red'},
+  {e:'🦠',t:'جراثيم تهاجم الجسم!',c:'white'},{e:'🤒',t:'الجسم يحتاج إلى حماية من الأمراض',c:'white'},
+  {e:'🩸',t:'جرح في يد البحّار وهو ينزف!',c:'plt'},{e:'🩹',t:'جرح الغيص يحتاج إلى أن يلتئم',c:'plt'},
+  {e:'💧',t:'مكوّنات الدم تحتاج إلى سائل تسبح فيه',c:'plasma'},{e:'🌊',t:'ما الجزء السائل من الدم؟',c:'plasma'}];
+function nextEvent(){ if(!G.evQ||!G.evQ.length)G.evQ=shuffle(EVENTS); G.ev={...G.evQ.pop(),t0:0,T:Math.max(4.5,8-G.got*.4)}; }
+function crewChoose(c){
+  if(!G.running||G.paused||!G.ev||G.ev.done)return; const ev=G.ev;
+  if(c===ev.c){ev.done=1; good(W/2,H*.42,'#ffd166'); fact(`${CREW[c].e} ${CREW[c].n}: ${CREW[c].f}`,crewCard().y-10); G.evWait=.7; afterGood();}
+  else { bad(ev.t,`هذا الموقف يحتاج إلى <b>${CREW[ev.c].n}</b> ${CREW[ev.c].e}: ${CREW[ev.c].f}.<br>أمّا <b>${CREW[c].n}</b> فـ${CREW[c].f}.`,W/2,H*.42); ev.done=1; G.evWait=.3; }
+}
+function crewCard(){const w=Math.min(W*.86,440),h=Math.min(190,H*.26);return {w,h,x:W/2-w/2,y:Math.max(W<520?250:225,H*.3)}}
+function updateCrew(dt){
+  if(!G.ev){nextEvent();return}
+  if(G.ev.done){G.evWait-=dt;if(G.evWait<=0)nextEvent();return}
+  G.ev.t0+=dt; if(G.ev.t0>=G.ev.T){ const ev=G.ev; ev.done=1; G.evWait=.9; G.streak=0; SFX.tick();
+    fact(`⏳ انتهى الوقت! كان يحتاج إلى ${CREW[ev.c].e} ${CREW[ev.c].n}`,crewCard().y-10); }
+}
+function drawCrew(){
+  const ev=G.ev; if(!ev)return; const c=crewCard(); cx.save();
+  const shake=!ev.done&&ev.t0>ev.T*.7?Math.sin(G.t*40)*3:0; cx.translate(shake,0);
+  rr(c.x,c.y,c.w,c.h,22);cx.fillStyle=ev.done?'rgba(223,245,225,.95)':'rgba(255,248,236,.96)';cx.fill();cx.strokeStyle='#c0392b';cx.lineWidth=5;cx.stroke();
+  cx.font=`${Math.min(54,c.h*.32)}px ${FONT}`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText(ev.e,W/2,c.y+c.h*.3);
+  cx.fillStyle='#3b2412';cx.direction='rtl';const {lines,fs}=fitText(ev.t,c.w-30,c.h*.42,Math.min(24,c.h*.15));lines.forEach((l,j)=>cx.fillText(l,W/2,c.y+c.h*.66+(j-(lines.length-1)/2)*fs*1.2));
+  if(!ev.done){const k=1-ev.t0/ev.T;rr(c.x+14,c.y+c.h-14,(c.w-28)*k,7,4);cx.fillStyle=k<.3?'#d4543c':'#f2a91f';cx.fill();}
+  cx.restore();
+  cx.save();cx.font=`900 ${Math.min(18,W*.042)}px ${FONT}`;cx.textAlign='center';cx.direction='rtl';cx.fillStyle='#fff';cx.strokeStyle='rgba(15,61,74,.8)';cx.lineWidth=5;
+  const q='من يتصرّف من طاقم الدم؟ 👇';cx.strokeText(q,W/2,c.y+c.h+30);cx.fillText(q,W/2,c.y+c.h+30);cx.restore();
+}
+
+/* =================== MODE: RIDDLE (stage 5) =================== */
+const RIDDLES=[
+ {a:'القلب',c:['أنا عضو عضلي 💪','أعمل ليلًا ونهارًا دون توقّف','أضخّ الدم داخل الجسم']},
+ {a:'الشريان',c:['أنا وعاء دموي','أبدأ رحلتي من القلب','أنقل الدم من القلب إلى أجزاء الجسم']},
+ {a:'الوريد',c:['أنا وعاء دموي','تنتهي رحلتي عند القلب','أنقل الدم من أجزاء الجسم إلى القلب']},
+ {a:'الشعيرات الدموية',c:['أنا أوعية دموية دقيقة جدًّا','أوجد قرب أجزاء الجسم','فيّ يحدث تبادل المواد بين الدم وأجزاء الجسم']},
+ {a:'الأوعية الدموية',c:['أنا شبكة كبيرة','منّي الشرايين والأوردة والشعيرات','أنا أنابيب تنقل الدم داخل جسم الإنسان']},
+ {a:'البلازما',c:['أنا من مكوّنات الدم','أنا سائل 💧','تسبح فيّ باقي مكوّنات الدم']},
+ {a:'خلايا الدم البيضاء',c:['أنا من مكوّنات الدم','أنا جندي شجاع ⚔️','أهاجم الجراثيم لأحمي الجسم من الأمراض']},
+ {a:'الصفائح الدموية',c:['أنا من مكوّنات الدم','أظهر عندما يُجرح الجسم 🩹','أساعد على تجلّط الدم لالتئام الجروح']},
+ {a:'خلايا الدم الحمراء',c:['أنا من مكوّنات الدم','لوني أحمر 🔴','أنقل الأكسجين والغذاء المهضوم والفضلات']}];
+function startRiddle(){
+  if(!G.rq||!G.rq.length)G.rq=shuffle(RIDDLES); const R=G.rq.pop(); G.rid={R,shown:1,t:0,done:0};
+  const opts=shuffle([R.a,...shuffle(RIDDLES.map(r=>r.a).filter(a=>a!==R.a)).slice(0,3)]);
+  $('#famBox').innerHTML=`<div style="font-weight:900;font-size:clamp(17px,4.6vw,22px)">🤔 حزّورة النوخذة <span style="opacity:.6;font-size:.8em">(${G.got+1}/${LV().need})</span></div>
+    <div style="font-size:14px;opacity:.75;margin:2px 0 8px">أجب مبكرًا لتربح لؤلؤًا أكثر! 🦪</div>
+    <div id="clues" style="display:grid;gap:6px;text-align:right"></div>
+    <button class="btn small sea" id="moreClue" style="margin:8px 0">🔍 تلميح آخر</button>
+    <div class="opts" style="grid-template-columns:1fr 1fr">${opts.map(o=>`<button class="opt" style="text-align:center">${o}</button>`).join('')}</div>`;
+  renderClues();
+  $('#moreClue').onclick=()=>{if(G.paused||G.rid.done)return;SFX.click();revealClue()};
+  document.querySelectorAll('#famBox .opt').forEach(b=>b.onclick=()=>{ const r=G.rid; if(G.paused||r.done)return; r.done=1; const rc=b.getBoundingClientRect();
+    if(b.textContent===R.a){ b.classList.add('right'); const bonus=r.penal?0:3-r.shown; good(rc.left+rc.width/2,rc.top,'#ffd166'); if(bonus>0){G.pearls+=bonus;floatTxt(`+${bonus} 🦪 مكافأة السرعة!`,W/2,rc.top-30,'#ffe08a',22);updHud()}
+      G.ridNext=.9; if(G.got>=LV().need){G.ridNext=0;afterGood()} }
+    else if(r.shown<3){ r.done=0; b.classList.add('wrong'); b.disabled=true; G.streak=0; SFX.bad(); r.penal=(r.penal||0)+1;
+      floatTxt('ليست هذه! 🤔 إليك تلميحًا آخر',W/2,rc.top-20,'#ffd166',22); revealClue(); }
+    else { b.classList.add('wrong'); document.querySelectorAll('#famBox .opt').forEach(x=>{if(x.textContent===R.a)x.classList.add('right')});
+      bad(b.textContent,`ليست «${b.textContent}»! الإجابة: <b>${R.a}</b>.<br>${R.c.join('، ')}.`,rc.left+rc.width/2,rc.top); G.ridNext=.2; }
+  });
+  clearInterval(famTimer);
+  famTimer=setInterval(()=>{ if(!G.running||G.paused)return; const r=G.rid;
+    if(r.done){ if(G.ridNext>0){G.ridNext-=.1; if(G.ridNext<=0&&G.got<LV().need)startRiddle()} return }
+    r.t+=.1; if(r.t>=4.5&&r.shown<3)revealClue(); },100);
+}
+function revealClue(){const r=G.rid; if(r.shown<3){r.shown++;r.t=0;SFX.tick();renderClues()}}
+function renderClues(){const r=G.rid; $('#clues').innerHTML=r.R.c.slice(0,r.shown).map((c,i)=>`<div style="background:#fff;border:3px solid #e6cfa5;border-radius:12px;padding:8px 12px;font-weight:800;font-size:clamp(16px,4.3vw,20px);animation:pop .25s">${i+1}. ${c}</div>`).join('');
+  const m=$('#moreClue'); if(m)m.style.display=r.shown<3?'':'none';}
+
+/* =================== MODE: RACE (stage 6) =================== */
+const RACEQ=[
+ {q:'بعد التجديف السريع… ماذا يحدث لنبضات قلب البحّار؟',a:'تزيد 💓',w:'تقلّ',why:'عند ممارسة الرياضة تتسارع نبضات القلب.'},
+ {q:'بعد التجديف السريع… ماذا يحدث لعدد مرات التنفس؟',a:'يزيد 😮‍💨',w:'يقلّ',why:'عند ممارسة الرياضة يزداد عدد مرات التنفس.'},
+ {q:'لماذا يتنفس البحّار أسرع وهو يجدّف؟',a:'ليحصل على أكسجين أكثر لإنتاج الطاقة',w:'ليحصل على أكسجين أقل',why:'يزيد عدد مرات التنفس ليحصل الجسم على كمية أكبر من الأكسجين اللازم لإنتاج الطاقة.'},
+ {q:'كم عدد نبضات القلب تقريبًا قبل الرياضة (وأنت مرتاح)؟',a:'٧٠ – ٨٠ نبضة',w:'١٢٠ نبضة',why:'قبل الرياضة تكون النبضات تقريبًا ٧٠–٨٠، وبعدها قد تصل إلى ١٢٠!'},
+ {q:'تعرّق البحّار بعد التجديف. لماذا؟',a:'لأنّ جسمه ينتج حرارة أكثر، والعرق يبرّده',w:'لأنّ جسمه أصبح باردًا جدًّا',why:'عند بذل مجهود كبير يزداد إنتاج الجسم للحرارة، فيُفرز العرق الذي يؤدي تبخّره إلى تبريد الجسم.'},
+ {q:'قلب الشخص الرياضي يكون عادةً:',a:'أقوى وأكبر قليلًا',w:'أضعف وأصغر',why:'قلب الرياضي أقوى وأكبر قليلًا لأنه اعتاد على بذل جهد أكبر بانتظام.'}];
+const BUOYS=[.16,.33,.5,.67,.84];
+function initRace(){G.rc={me:0,rival:0,int:0,buoy:0,q:null,done:0,rq:shuffle(RACEQ)};}
+function raceTap(){ if(!G.running||G.paused||G.rc.q||G.rc.done)return; G.rc.int=Math.min(1,G.rc.int+.09); SFX.tick();
+  G.fx.push({type:'p',x:raceX(G.rc.me)+30,y:raceLane(0)+14,vx:60+Math.random()*60,vy:-60,r:3,c:'rgba(255,255,255,.8)',life:.5,max:.5}); }
+function raceX(p){return W-60-(W-120)*p}
+function raceLane(i){const top=Math.max(W<520?250:220,H*.32);return top+i*Math.min(110,H*.13)}
+function updateRace(dt){
+  const r=G.rc; if(r.done)return; r.int=Math.max(0,r.int-dt*.22);
+  if(r.q)return;
+  r.me=Math.min(1,r.me+(0.012+0.075*r.int)*dt); r.rival=Math.min(1,r.rival+0.047*dt);
+  if(r.buoy<BUOYS.length&&r.me>=BUOYS[r.buoy]){ r.me=BUOYS[r.buoy]; askRaceQ(); }
+  if(r.me>=1){ r.done=1; const first=r.me>=1&&r.rival<1; floatTxt(first?'🏆 وصلت أولًا!':'🏁 وصلت!',W/2,H*.45,'#ffd166',34);
+    if(first){G.pearls+=3;updHud()} setTimeout(()=>{if(G.running)levelDone()},900); }
+}
+function askRaceQ(){
+  const r=G.rc; if(!r.rq.length)r.rq=shuffle(RACEQ); const q=r.rq.pop(); r.q=q;
+  const opts=shuffle([q.a,q.w]);
+  $('#famBox').innerHTML=`<div style="font-weight:900;color:#8a5a2b">🛟 العوّامة ${r.buoy+1} من ${BUOYS.length}</div><div style="font-weight:800;font-size:clamp(17px,4.6vw,22px);margin:6px 0">${q.q}</div>
+    <div class="opts">${opts.map(o=>`<button class="opt" style="text-align:center">${o}</button>`).join('')}</div>`;
+  $('#fam').classList.add('on'); $('#choiceCtrl').classList.remove('on');
+  document.querySelectorAll('#famBox .opt').forEach(b=>b.onclick=()=>{ if(G.paused)return; const rc=b.getBoundingClientRect();
+    if(b.textContent===q.a){ $('#fam').classList.remove('on'); $('#choiceCtrl').classList.add('on'); r.q=null; r.buoy++; r.me+=.005; r.int=Math.min(1,r.int+.3);
+      good(rc.left+rc.width/2,rc.top,'#ffd166'); fact(`✔ ${q.why}`,raceLane(0)-40); }
+    else { b.classList.add('wrong'); b.disabled=true; bad(b.textContent,`${q.why}`,rc.left+rc.width/2,rc.top); }
+  });
+}
+function drawBoat(x,y,col,flip,lab){cx.save();cx.translate(x,y+Math.sin(G.t*5+x)*2);
+  cx.fillStyle='#7a4b20';cx.beginPath();cx.moveTo(-34,0);cx.lineTo(34,0);cx.lineTo(24,14);cx.lineTo(-24,14);cx.closePath();cx.fill();
+  cx.strokeStyle='#5a3a1a';cx.lineWidth=3;cx.beginPath();cx.moveTo(0,0);cx.lineTo(0,-44);cx.stroke();
+  cx.fillStyle=col;cx.beginPath();cx.moveTo(-2,-44);cx.lineTo(-30,-6);cx.lineTo(-2,-6);cx.closePath();cx.fill();
+  cx.font=`800 13px ${FONT}`;cx.fillStyle='#fff';cx.strokeStyle='rgba(0,0,0,.6)';cx.lineWidth=3;cx.textAlign='center';cx.direction='rtl';cx.strokeText(lab,0,30);cx.fillText(lab,0,30);cx.restore();}
+function drawRace(){
+  const r=G.rc; cx.save();
+  // lanes
+  for(let i=0;i<2;i++){const y=raceLane(i)+14;cx.strokeStyle='rgba(255,255,255,.35)';cx.lineWidth=2;cx.setLineDash([10,10]);cx.beginPath();cx.moveTo(40,y);cx.lineTo(W-40,y);cx.stroke();cx.setLineDash([])}
+  // finish flag
+  cx.font=`${Math.min(34,W*.08)}px ${FONT}`;cx.textAlign='center';cx.fillText('🏁',raceX(1),raceLane(0)-30);
+  BUOYS.forEach((b,i)=>{cx.font='22px '+FONT;cx.globalAlpha=i<r.buoy?.35:1;cx.fillText('🛟',raceX(b),raceLane(0)-34);cx.globalAlpha=1});
+  drawBoat(raceX(r.rival),raceLane(1),'#e9e0cc',0,'سفينة الجيران');
+  drawBoat(raceX(r.me),raceLane(0),'#e74c3c',0,G.name);
+  cx.restore();
+  // gauges
+  const hr=Math.round(75+45*r.int), br=Math.round(16+24*r.int);
+  const gw=Math.min(W*.9,460), gx=W/2-gw/2, gy=raceLane(1)+70;
+  cx.save();rr(gx,gy,gw,84,18);cx.fillStyle='rgba(255,248,236,.94)';cx.fill();cx.strokeStyle='#c8955a';cx.lineWidth=3;cx.stroke();
+  const beat=1+.15*Math.max(0,Math.sin(G.t*(4+8*r.int)));
+  cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';
+  cx.save();cx.translate(gx+gw*.75,gy+30);cx.scale(beat,beat);cx.font='28px '+FONT;cx.fillText('💓',0,0);cx.restore();
+  cx.font=`900 ${Math.min(22,W*.05)}px ${FONT}`;cx.fillStyle='#b71c1c';cx.fillText(`${hr} نبضة/دقيقة`,gx+gw*.75,gy+62);
+  cx.font='28px '+FONT;cx.fillText('😮‍💨',gx+gw*.25,gy+30);
+  cx.font=`900 ${Math.min(22,W*.05)}px ${FONT}`;cx.fillStyle='#1f6f8b';cx.fillText(`${br} نَفَسًا/دقيقة`,gx+gw*.25,gy+62);
+  cx.restore();
+  if(!r.q&&!r.done&&r.int<.15){cx.save();cx.font=`900 ${Math.min(22,W*.05)}px ${FONT}`;cx.textAlign='center';cx.fillStyle='#fff';cx.strokeStyle='rgba(15,61,74,.8)';cx.lineWidth=5;cx.globalAlpha=.6+.4*Math.sin(G.t*6);
+    const t='👇 اضغط «جدّف» بسرعة!';cx.strokeText(t,W/2,gy+120);cx.fillText(t,W/2,gy+120);cx.restore();}
+}
+
+/* =================== MODE: RESPOND (stage 6) =================== */
+const RSP={sweat:{n:'العرق',e:'💦'},shiver:{n:'الرعشة',e:'🥶'},heart:{n:'تسارع نبضات القلب',e:'💓'},breath:{n:'تسارع التنفس',e:'😮‍💨'}};
+const ALL4=['sweat','shiver','heart','breath'];
+const SCEN=[
+ {f:'☀️ حرّ الظهيرة الشديد على ظهر السفينة',r:['sweat'],k:'hot'},{f:'🔥 شمس الصيف الحارّة جدًّا',r:['sweat'],k:'hot'},
+ {f:'❄️ ماء البحر بارد جدًّا في ليلة شتوية',r:['shiver'],k:'cold'},{f:'🌬️ هواء بارد جدًّا في الصباح الباكر',r:['shiver'],k:'cold'},
+ {f:'🦈 سمكة قرش تقترب من الغيص!',r:ALL4,k:'fear'},{f:'🌩️ عاصفة مخيفة تهزّ السفينة!',r:ALL4,k:'fear'},
+ {f:'🚣 البحّار يجدّف بسرعة وقوة',r:['sweat','heart','breath'],k:'sport'},{f:'🏃 البحّار يركض على الشاطئ',r:['sweat','heart','breath'],k:'sport'}];
+const SCEN_WHY={hot:'عند <b>ارتفاع درجة الحرارة</b> يُفرز الجسم <b>العرق</b> 💦، وتبخّره يساعد على تبريد الجسم.',
+ cold:'عند <b>انخفاض درجة الحرارة</b> تهتزّ العضلات (<b>الرعشة</b> 🥶)، فتولّد حرارة تدفئ الجسم.',
+ fear:'عند <b>الخوف</b> يستجيب الجسم بكل هذه: <b>العرق</b>، و<b>الرعشة</b>، و<b>تسارع نبضات القلب</b>، و<b>تسارع التنفس</b>.',
+ sport:'عند <b>ممارسة الرياضة</b> تتسارع <b>نبضات القلب</b> و<b>التنفس</b> للحصول على أكسجين أكثر لإنتاج الطاقة، ويُفرز <b>العرق</b> لأنّ إنتاج الحرارة يزداد.'};
+function nextScen(){ if(!G.scQ||!G.scQ.length)G.scQ=shuffle(SCEN); G.sc={...G.scQ.pop()}; G.sel={}; renderRespCtrl(); }
+function renderRespCtrl(){ const CC=$('#choiceCtrl'); CC.innerHTML=''; CC.classList.add('on','four');
+  ALL4.forEach(k=>{const b=document.createElement('button');b.innerHTML=`${G.sel[k]?'☑️':'⬜'} ${RSP[k].e} ${RSP[k].n}`;b.style.background=G.sel[k]?'#1f8a9e':'rgba(90,70,40,.85)';
+    b.onclick=()=>{if(G.paused||(G.sc&&G.sc.done))return;G.sel[k]=!G.sel[k];SFX.click();renderRespCtrl()};CC.appendChild(b)});
+  const ok=document.createElement('button');ok.textContent='✔ تأكيد';ok.style.background='linear-gradient(180deg,#ffd166,#f2a91f)';ok.style.color='#4a2a05';ok.style.flex='1 1 100%';ok.style.maxWidth='540px';
+  ok.onclick=respConfirm;CC.appendChild(ok); }
+function respConfirm(){ if(!G.running||G.paused||!G.sc||G.sc.done)return; const s=G.sc, chosen=ALL4.filter(k=>G.sel[k]);
+  if(!chosen.length){floatTxt('اختر استجابة واحدة على الأقل ☝️',W/2,H*.5,'#fff',22);return}
+  const same=chosen.length===s.r.length&&s.r.every(k=>G.sel[k]);
+  const list=s.r.map(k=>`${RSP[k].e} ${RSP[k].n}`).join('، ');
+  s.done=1;
+  if(same){ good(W/2,H*.45,'#ffd166'); fact(`✔ ${list}`,respCard().y+respCard().h+50); G.scShow=1.2; G.got<LV().need?setTimeout(()=>{if(G.running&&LV().type==='respond')nextScen()},1200):0; afterGood(); }
+  else { bad(s.f,`${SCEN_WHY[s.k]}<br>الإجابة: <b>${list}</b>.`,W/2,H*.45); G.sel={}; s.r.forEach(k=>G.sel[k]=true); renderRespCtrl(); G.respNext=1; }
+}
+function respCard(){const w=Math.min(W*.9,460);return {w,h:76,x:W/2-w/2,y:Math.max(W<520?150:120,H*.19)}}
+function updateRespond(dt){ if(G.respNext&&!G.paused){G.respNext=0;nextScen()} }
+function drawRespond(){
+  const c=respCard(), s=G.sc; if(!s)return; cx.save();
+  rr(c.x,c.y,c.w,c.h,18);cx.fillStyle='rgba(255,248,236,.96)';cx.fill();cx.strokeStyle='#c0392b';cx.lineWidth=4;cx.stroke();
+  cx.fillStyle='#3b2412';cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';const {lines,fs}=fitText(s.f,c.w-24,c.h-14,Math.min(22,W*.05));lines.forEach((l,j)=>cx.fillText(l,W/2,c.y+c.h/2+(j-(lines.length-1)/2)*fs*1.2));
+  cx.font=`900 ${Math.min(17,W*.04)}px ${FONT}`;cx.fillStyle='#fff';cx.strokeStyle='rgba(15,61,74,.8)';cx.lineWidth=5;const q='كيف يستجيب جسمك؟ اختر كل الإجابات الصحيحة 👇';cx.strokeText(q,W/2,c.y+c.h+22);cx.fillText(q,W/2,c.y+c.h+22);
+  cx.restore();
+  // character with live effects
+  const img=IMG[G.char]; const h=Math.min(H*.32,250), w=img?h*img.width/img.height:h*.5; const sh=G.sel.shiver?Math.sin(G.t*60)*3:0;
+  const x=W/2-w/2+sh, y=c.y+c.h+40+Math.max(0,(H-(c.y+c.h+40)-(W<520?190:130)-h)/2);
+  if(img)cx.drawImage(img,x,y,w,h);
+  cx.save();cx.textAlign='center';cx.textBaseline='middle';
+  if(G.sel.sweat){for(let i=0;i<3;i++){const t=(G.t*.8+i/3)%1;cx.globalAlpha=1-t;cx.font='20px '+FONT;cx.fillText('💧',W/2+(i-1)*w*.35,y+h*.1+t*h*.4)}cx.globalAlpha=1}
+  if(G.sel.shiver){cx.font='22px '+FONT;cx.fillText('❄️',x-14,y+h*.3);cx.fillText('❄️',x+w+14,y+h*.45)}
+  if(G.sel.heart){const b=1+.25*Math.max(0,Math.sin(G.t*14));cx.save();cx.translate(x+w+28,y+h*.25);cx.scale(b,b);cx.font='30px '+FONT;cx.fillText('💓',0,0);cx.restore()}
+  if(G.sel.breath){const t=(G.t*1.5)%1;cx.globalAlpha=1-t;cx.font='26px '+FONT;cx.fillText('💨',x-20-t*30,y+h*.15);cx.globalAlpha=1}
+  cx.restore();
+}
+
+/* =================== MODE: BOSS (stage 6) =================== */
+const BOSSQ=[
+ {q:'مستويات التعضّي في جسم الإنسان تبدأ بالخلية ثم النسيج.',a:1,why:'الخلية ← النسيج ← العضو ← الجهاز.'},
+ {q:'تبدأ عملية الهضم في المعدة.',a:0,why:'عملية الهضم تبدأ في الفم.'},
+ {q:'ينخفض الحجاب الحاجز أثناء الزفير فيزداد حجم الرئتين.',a:0,why:'ينخفض الحجاب الحاجز أثناء الشهيق، أمّا في الزفير فيرتفع ويقلّ حجم الرئتين.'},
+ {q:'شكل ولون بتلات الزهرة من الصفات المكتسبة في النباتات.',a:0,why:'شكل ولون بتلات الزهرة صفات وراثية.'},
+ {q:'تتسارع نبضات القلب وعدد مرات التنفس عند انخفاض درجة حرارة الطقس.',a:0,why:'عند انخفاض الحرارة تحدث الرعشة (اهتزاز العضلات) لتدفئة الجسم.'},
+ {q:'تقوم المعدة بخلط الطعام بالعصارات الهضمية.',a:1,why:'المعدة تخلط الطعام بالعصارات الهضمية فيتحوّل إلى سائل غليظ.'},
+ {q:'انتقال الصفات الوراثية من الآباء إلى الأبناء يُسمّى الوراثة.',a:1,why:'الوراثة: انتقال الصفات الوراثية من الآباء إلى الأبناء.'},
+ {q:'تبخّر العرق يساعد على تبريد جسم الإنسان.',a:1,why:'عند ارتفاع الحرارة يُفرز العرق، وتبخّره يبرّد الجسم.'},
+ {q:'الوريد ينقل الدم من القلب إلى أجزاء الجسم.',a:0,why:'الشريان ينقل الدم من القلب إلى أجزاء الجسم، والوريد من أجزاء الجسم إلى القلب.'},
+ {q:'الصفائح الدموية تساعد على تجلّط الدم لالتئام الجروح.',a:1,why:'الصفائح الدموية مسؤولة عن تجلّط الدم لالتئام الجروح.'},
+ {q:'البلاستيدات الخضراء توجد في الخلية الحيوانية.',a:0,why:'البلاستيدات الخضراء توجد في الخلية النباتية فقط.'},
+ {q:'نغسل أيدينا قبل الأكل لمنع دخول الجراثيم إلى الجهاز الهضمي.',a:1,why:'غسل اليدين يمنع دخول الجراثيم إلى الجهاز الهضمي.'},
+ {q:'الرئتان تأخذان الأكسجين وتُخرجان ثاني أكسيد الكربون.',a:1,why:'هذه وظيفة الرئتين في الجهاز التنفسي.'},
+ {q:'تقليد الببغاء صوت الإنسان صفة وراثية.',a:0,why:'تقليد الأصوات صفة مكتسبة يتعلّمها الببغاء.'}];
+function initBoss(){G.bq=shuffle(BOSSQ);G.bs={hit:0,shake:0,open:0};nextBossQ();
+  const CC=$('#choiceCtrl'); CC.innerHTML=''; CC.classList.add('on'); CC.classList.remove('four');
+  [[1,'✔ صحيحة','#3f9b4f'],[0,'✘ خطأ','#d4543c']].forEach(([v,t,col])=>{const b=document.createElement('button');b.textContent=t;b.style.background=col;b.style.flex='1 1 40%';b.onclick=()=>bossAns(v);CC.appendChild(b)}); }
+function nextBossQ(){ if(!G.bq.length)G.bq=shuffle(BOSSQ); G.bqc={...G.bq.pop(),t:0,T:Math.max(8,13-G.got*.6)}; }
+function bossAns(v){ if(!G.running||G.paused||!G.bqc||G.bqc.done)return; const q=G.bqc;
+  if(v===q.a){ q.done=1; G.bs.shake=.4; good(W/2,bossBox().y+bossBox().s*.4,'#ffd166'); fact(`🔓 ${q.why}`,Math.min(H-(W<520?90:80),bossBox().y+bossBox().s*.95+56));
+    for(let i=0;i<16;i++)G.fx.push({type:'p',x:W/2,y:bossBox().y+bossBox().s*.5,vx:(Math.random()-.5)*400,vy:(Math.random()-.5)*400,r:3,c:'#ffe08a',life:.7,max:.7});
+    if(G.got>=LV().need){ G.bs.open=1; SFX.win(); floatTxt('✨ الدانة! ✨',W/2,bossBox().y+bossBox().s*.2,'#fff',40); setTimeout(()=>{if(G.running)levelDone()},1800) } else setTimeout(()=>{if(G.running)nextBossQ()},700); }
+  else { q.done=1; bad(null,`المحارة أغلقت قفلها! 🦪<br>العبارة «${q.q}» <b>${q.a?'صحيحة':'خطأ'}</b>.<br>${q.why}`,W/2,H*.5); G.bossNext=1; }
+}
+function bossBox(){const s=Math.min(W*.62,H*.36,330);return {s,x:W/2-s/2,y:Math.max(W<520?300:280,H*.38)}}
+function updateBoss(dt){ const q=G.bqc; G.bs.shake=Math.max(0,G.bs.shake-dt);
+  if(G.bossNext&&!G.paused){G.bossNext=0;nextBossQ();return}
+  if(!q||q.done)return; q.t+=dt; if(q.t>=q.T){ q.done=1; bad(null,`انتهى الوقت! ⏳ العبارة «${q.q}» <b>${q.a?'صحيحة':'خطأ'}</b>.<br>${q.why}`,W/2,H*.5); G.bossNext=1; } }
+function drawBoss(){
+  const b=bossBox(); const img=G.bs.open?IMG.oysopen:IMG.oysclosed; const sx=G.bs.shake>0?Math.sin(G.t*70)*8*G.bs.shake:0;
+  cx.save(); if(G.bs.open){cx.shadowColor='#fff3b0';cx.shadowBlur=60}
+  if(img)cx.drawImage(img,b.x+sx,b.y,b.s,b.s*img.height/img.width); cx.restore();
+  // locks
+  const N=LV().need, lw=Math.min(34,(W-40)/N); cx.save();cx.textAlign='center';cx.textBaseline='middle';cx.font=`${lw*.8}px ${FONT}`;
+  for(let i=0;i<N;i++){cx.globalAlpha=i<G.got?.35:1;cx.fillText(i<G.got?'🔓':'🔒',W/2+(i-(N-1)/2)*lw,b.y-22)} cx.restore();
+  // question card
+  const q=G.bqc; if(!q||G.bs.open)return; const w=Math.min(W*.92,520), h=Math.max(84,Math.min(110,H*.13)); const y=Math.max(W<520?150:118,H*.18);
+  cx.save();rr(W/2-w/2,y,w,h,18);cx.fillStyle='rgba(255,248,236,.97)';cx.fill();cx.strokeStyle='#8a5a2b';cx.lineWidth=4;cx.stroke();
+  cx.fillStyle='#3b2412';cx.textAlign='center';cx.textBaseline='middle';cx.direction='rtl';const {lines,fs}=fitText(q.q,w-26,h-24,Math.min(22,W*.05));lines.forEach((l,j)=>cx.fillText(l,W/2,y+h/2-4+(j-(lines.length-1)/2)*fs*1.2));
+  if(!q.done){const k=Math.max(0,1-q.t/q.T);rr(W/2-w/2+12,y+h-12,(w-24)*k,6,3);cx.fillStyle=k<.3?'#d4543c':'#f2a91f';cx.fill()}
+  cx.restore();
+}
+
+/* =================== MODE: FAMILY (stage 2) =================== */
+const TRAITS={skin:{lab:'لون البشرة',v:{'فاتح':'#f3cfaf','حنطي':'#d29c6e','أسمر':'#8d5a3b'}},
+  eye:{lab:'لون العينين',v:{'بنّي':'#6b3e1e','أخضر':'#3f9b4f','أزرق':'#3b78c4','عسلي':'#c18a2e'}},
+  htype:{lab:'نوع الشعر',v:{'مجعّد':1,'أملس':1}},
+  hcol:{lab:'لون الشعر',v:{'أسود':'#1e1a17','بنّي':'#6b4423','أشقر':'#d9b25a'}}};
+const TKEYS=['skin','eye','htype','hcol'];
+function face(p,opt){ // returns dataURL
+  const S=220,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+  const kid=opt.kid, fem=opt.fem, skin=TRAITS.skin.v[p.skin], hc=TRAITS.hcol.v[p.hcol], ec=TRAITS.eye.v[p.eye], curly=p.htype==='مجعّد';
+  const cxm=S/2, cy=kid?S*.47:S*.44, hr=kid?S*.27:S*.25;
+  x.fillStyle=opt.bg||'#fdf3e1';x.beginPath();x.arc(S/2,S/2,S/2,0,7);x.fill();
+  x.save();x.beginPath();x.arc(S/2,S/2,S/2-1,0,7);x.clip();
+  // long hair back (female)
+  x.fillStyle=hc;
+  if(fem){ if(curly){for(let i=0;i<26;i++){const a=Math.PI*(.05+i/25*.9);x.beginPath();x.arc(cxm+Math.cos(a)*hr*1.25,cy+Math.sin(a)*hr*1.3-hr*.25,hr*.32,0,7);x.fill()}}
+           else{x.beginPath();x.ellipse(cxm,cy+hr*.35,hr*1.22,hr*1.45,0,0,7);x.fill()} }
+  // shoulders
+  x.fillStyle=opt.shirt||'#fff';x.beginPath();x.ellipse(cxm,S*.98,S*.36,S*.2,0,0,7);x.fill();
+  x.fillStyle=skin;x.fillRect(cxm-hr*.28,cy+hr*.7,hr*.56,hr*.5);
+  // head
+  x.beginPath();x.ellipse(cxm,cy,hr,hr*1.1,0,0,7);x.fill();
+  // ears
+  x.beginPath();x.ellipse(cxm-hr*.98,cy+hr*.1,hr*.16,hr*.22,0,0,7);x.ellipse(cxm+hr*.98,cy+hr*.1,hr*.16,hr*.22,0,0,7);x.fill();
+  // hair top
+  x.fillStyle=hc;
+  if(curly){const n=15;for(let i=0;i<n;i++){const a=Math.PI*(1.0+i/(n-1));x.beginPath();x.arc(cxm+Math.cos(a)*hr*.95,cy+Math.sin(a)*hr*1.0-hr*.12,hr*(kid?.3:.27),0,7);x.fill()}
+    x.beginPath();x.ellipse(cxm,cy-hr*.62,hr*.85,hr*.42,0,0,7);x.fill();}
+  else{x.beginPath();x.ellipse(cxm,cy-hr*.45,hr*1.04,hr*.72,0,Math.PI,0);x.fill();
+    x.beginPath();x.moveTo(cxm-hr*1.02,cy-hr*.4);x.quadraticCurveTo(cxm-hr*.2,cy-hr*.05,cxm+hr*.5,cy-hr*.5);x.quadraticCurveTo(cxm+hr*.9,cy-hr*.3,cxm+hr*1.02,cy-hr*.35);x.lineTo(cxm+hr*1.0,cy-hr*.6);x.lineTo(cxm-hr*1.0,cy-hr*.6);x.fill();}
+  // eyes
+  const ey=cy+hr*.12, ex=hr*.42, er=hr*(kid?.25:.2);
+  for(const s of [-1,1]){x.fillStyle='#fff';x.beginPath();x.ellipse(cxm+s*ex,ey,er*1.15,er,0,0,7);x.fill();
+    x.fillStyle=ec;x.beginPath();x.arc(cxm+s*ex,ey,er*.78,0,7);x.fill();x.fillStyle='#111';x.beginPath();x.arc(cxm+s*ex,ey,er*.36,0,7);x.fill();
+    x.fillStyle='#fff';x.beginPath();x.arc(cxm+s*ex-er*.25,ey-er*.3,er*.2,0,7);x.fill();
+    x.strokeStyle=hc==='#d9b25a'?'#8a6a2a':hc;x.lineWidth=hr*.07;x.lineCap='round';x.beginPath();x.moveTo(cxm+s*ex-er,ey-er*1.5);x.quadraticCurveTo(cxm+s*ex,ey-er*1.9,cxm+s*ex+er,ey-er*1.5);x.stroke();}
+  // nose, cheeks, mouth
+  x.strokeStyle='rgba(0,0,0,.25)';x.lineWidth=hr*.05;x.beginPath();x.moveTo(cxm,ey+er*.6);x.quadraticCurveTo(cxm+hr*.1,ey+hr*.38,cxm-hr*.03,ey+hr*.42);x.stroke();
+  x.fillStyle='rgba(230,90,90,.22)';x.beginPath();x.arc(cxm-hr*.6,cy+hr*.5,hr*.14,0,7);x.arc(cxm+hr*.6,cy+hr*.5,hr*.14,0,7);x.fill();
+  if(opt.dad){x.fillStyle=hc;x.beginPath();x.ellipse(cxm,cy+hr*.66,hr*.32,hr*.09,0,0,7);x.fill()}
+  x.strokeStyle='#8a3b2a';x.lineWidth=hr*.07;x.beginPath();x.arc(cxm,cy+hr*.62,hr*.24,.15*Math.PI,.85*Math.PI);x.stroke();
+  x.restore();
+  return c.toDataURL();
+}
+function traitWord(k,v){return `${TRAITS[k].lab}: ${v}`}
+function makePuzzle(){
+  const rnd=k=>pick(Object.keys(TRAITS[k].v));
+  let F,M; do{F={},M={};TKEYS.forEach(k=>{F[k]=rnd(k);M[k]=rnd(k)})}while(TKEYS.filter(k=>F[k]!==M[k]).length<2);
+  // child: mix, at least one trait from each where they differ
+  let C; const diff=TKEYS.filter(k=>F[k]!==M[k]);
+  do{C={};TKEYS.forEach(k=>C[k]=Math.random()<.5?F[k]:M[k])}while(!(diff.some(k=>C[k]===F[k])&&diff.some(k=>C[k]===M[k])));
+  // distractors: change traits to values held by neither parent
+  const outside=k=>Object.keys(TRAITS[k].v).filter(v=>v!==F[k]&&v!==M[k]);
+  const changeable=TKEYS.filter(k=>outside(k).length);
+  const ds=[];let guard=0;
+  while(ds.length<3&&guard++<200){const d={...C};const ks=shuffle(changeable).slice(0,Math.min(changeable.length,1+Math.floor(Math.random()*2)));
+    ks.forEach(k=>d[k]=pick(outside(k))); const key=JSON.stringify(d); if(ks.length&&!ds.some(x=>JSON.stringify(x)===key))ds.push(d)}
+  const fem=Math.random()<.5;
+  return {F,M,C,ds,fem};
+}
+function famExplain(P,kid){
+  const fromF=[],fromM=[],both=[];
+  TKEYS.forEach(k=>{const v=kid[k];if(v===P.F[k]&&v===P.M[k])both.push(traitWord(k,v));else if(v===P.F[k])fromF.push(traitWord(k,v));else if(v===P.M[k])fromM.push(traitWord(k,v))});
+  const w=P.fem?'تشبه':'يشبه', h=P.fem?'ها':'ه', s=[];
+  if(fromF.length)s.push(`${w} <b>أبا${h}</b> في: ${fromF.join('، ')}`);
+  if(fromM.length)s.push(`${w} <b>أمّ${h}</b> في: ${fromM.join('، ')}`);
+  if(both.length)s.push(`${w} <b>والدَي${h}</b> معًا في: ${both.join('، ')}`);
+  return s.join('.<br>')+'.';
+}
+function famWrongWhy(P,kid){
+  const k=TKEYS.find(k=>kid[k]!==P.F[k]&&kid[k]!==P.M[k]); const lab=TRAITS[k].lab;
+  return `${P.fem?'هذه الطفلة':'هذا الطفل'}: ${lab} <b>${kid[k]}</b>،<br>لكنّ ${lab} عند الأب <b>${P.F[k]}</b>، وعند الأم <b>${P.M[k]}</b>!<br>الأبناء يرثون صفاتهم من آبائهم 🧬.`;
+}
+let famTimer=null;
+function startPuzzle(){
+  const P=makePuzzle(); G.puz=P;
+  const dad=face(P.F,{dad:1,shirt:'#ffffff',bg:'#e3f1f5'}), mom=face(P.M,{fem:1,shirt:'#2f7d4f',bg:'#fbe9ef'});
+  const kids=shuffle([{p:P.C,ok:1},...P.ds.map(d=>({p:d,ok:0}))]); G.famKids=kids;
+  const chips=p=>TKEYS.map(k=>`<span class="chip">${traitWord(k,p[k])}</span>`).join('');
+  $('#famBox').innerHTML=`<div class="parents"><div class="par"><img src="${dad}" alt="الأب"><b>الأب</b>${chips(P.F)}</div><div class="heart">❤️</div><div class="par"><img src="${mom}" alt="الأم"><b>الأم</b>${chips(P.M)}</div></div>
+    <div style="font-weight:900;margin-top:8px;font-size:clamp(16px,4.4vw,21px)">${P.fem?'أيّ هؤلاء ابنتهما؟ 👧':'أيّ هؤلاء ابنهما؟ 👦'}</div>
+    <div class="kids">${kids.map((k,i)=>`<div class="kid" data-i="${i}"><img src="${face(k.p,{kid:1,fem:P.fem,shirt:P.fem?'#c0392b':'#ffffff',bg:'#fff7e6'})}" alt="طفل ${i+1}"></div>`).join('')}</div>
+    <div class="timer"><i id="famT"></i></div>`;
+  const T=Math.max(12,22-G.got*2.5); let left=T; G.famLock=false;
+  document.querySelectorAll('.kid').forEach(el=>el.onclick=()=>{ if(G.famLock||G.paused)return; const k=kids[+el.dataset.i];
+    if(k.ok){G.famLock=true;el.classList.add('right');clearInterval(famTimer);good(W/2,H*.5,'#ffd166');
+      const ex=famExplain(P,P.C); afterGood(()=>{showModal(`✔ ${P.fem?'صحيح! هذه ابنتهما':'صحيح! هذا ابنهما'} 👏<br>${ex}`,[{t:G.got>=LV().need?'رائع! ⬅':'الأسرة التالية ⬅',f:()=>{hideModal();G.paused=false;if(G.got>=LV().need)levelDone();else startPuzzle()}}]);G.paused=true;});}
+    else{el.classList.add('wrong');bad(null,famWrongWhy(P,k.p),W/2,H*.5,true)}
+  });
+  famTimer=setInterval(()=>{ if(G.paused||!G.running)return; left-=.1; const e=$('#famT'); if(e)e.style.width=Math.max(0,left/T*100)+'%';
+    if(left<=0){clearInterval(famTimer);G.famLock=true;G.streak=0;SFX.tick();G.paused=true;
+      showModal(`⏳ انتهى الوقت! ${P.fem?'الابنة الصحيحة':'الابن الصحيح'}:<br>${famExplain(P,P.C)}`,[{t:'أسرة جديدة ⬅',f:()=>{hideModal();G.paused=false;startPuzzle()}}]);}
+  },100);
+}
+
+/* =================== COMMON GAMEPLAY =================== */
+function good(x,y,col){ G.got++;G.streak++;const mult=G.streak>=3?2:1;G.pearls+=mult;
+  if(G.streak>=3&&G.streak%3===0){SFX.combo();floatTxt(pick(['رائع! 🔥','ممتاز! ⭐','ما شاء الله! 🌟','بطل الفريج! 💪']),W/2,H*.4,'#ffd166',38)} else SFX.ok();
+  floatTxt(mult>1?'+2 🦪':'+1 🦪',x,y,'#fff',26); burst(x,y,col,12); updHud(); }
+function afterGood(cb){ if(cb)return cb(); if(G.got>=LV().need)setTimeout(levelDone,350); }
+function bad(t,why,x,y,keepOn){
+  G.mist++;G.streak=0;G.hearts--;G.shake=6;SFX.bad();burst(x,y,'#d4543c',10);updHud();G.paused=true;
+  const last=G.hearts<=0;
+  showModal(`${t?`<div style="font-size:1.1em;font-weight:800;color:#d4543c">«${t}» 🤔</div>`:'<div style="font-size:1.1em;font-weight:800;color:#d4543c">ليس هذا! 🤔</div>'}${why}`,
+    last?[{t:'حاول مرة أخرى 💪',f:()=>{hideModal();startLevel(G.lvl)}}]:[{t:'فهمت! نكمل ⛵',f:()=>{hideModal();G.paused=false}}],
+    last?'لا بأس يا بحّار! كل بطل يتعلّم من أخطائه.':'');
+}
+function updHud(){
+  $('#pearls span').textContent=G.pearls;
+  $('#hearts').textContent='❤️'.repeat(Math.max(0,G.hearts))+'🤍'.repeat(3-Math.max(0,G.hearts));
+  $('#progBar').style.width=Math.min(100,G.got/LV().need*100)+'%';
+  if(LV().chain)setTask();
+}
+function setTask(){
+  const L=LV(), n=G.lvl+1, N=ST().levels.length;
+  if(L.type==='voyage'){const v=G.vs,I=vgeo().isl[v.isl];const step=v.phase==='heart'?'انطلق من القلب':v.phase==='atFull'?`سلّم الحمولة في «${I.n}»`:'عُد إلى القلب';
+    $('#task').innerHTML=`الجولة ${n}/${N} — ${L.title}<small>المهمة: ${I.e} «${I.n}» — ${step} • الحمولة: ${v.cargo==='full'?'🫁 أكسجين + 🍞 غذاء':'🗑️ فضلات'}</small>`; return}
+  if(L.type==='bubble'){ $('#task').innerHTML=`الجولة ${n}/${N} — فرقع فقاعات: <span style="background:#ffd166;color:#4a2a05;border-radius:8px;padding:0 8px">${G.bmode==='in'?'الشهيق 🌬️':'الزفير 💨'}</span><small>${G.bmode==='in'?'الشهيق: دخول الهواء إلى الرئتين':'الزفير: خروج الهواء من الرئتين'}</small>`; return}
+  if(L.type==='fish'){ $('#task').innerHTML=`الجولة ${n}/${N} — اصطد سمكة وظيفة: <span style="background:#ffd166;color:#4a2a05;border-radius:8px;padding:0 8px">${ORG[G.wantOrg].n}</span><small>${L.sub}</small>`; return}
+  if(L.type==='runner'){const k=G.chainIdx%6; $('#task').innerHTML=`الجولة ${n}/${N} — ${L.title}<small>${L.sub}</small><div class="chain">${ORDER.map((o,i)=>`<span class="${i<k?'done':i===k?'next':''}">${ORG[o].n}</span>`).join('<span style="background:none;padding:0">←</span>')}</div>`; return}
+  if(L.func){ $('#task').innerHTML=`الجولة ${n}/${N} — التقط وظيفة: <span style="background:#ffd166;color:#4a2a05;border-radius:8px;padding:0 8px">${PARTS[G.funcKey].n}</span><small>${L.sub}</small>`; return}
+  let html=`الجولة ${n}/${N} — ${L.title}<small>${L.sub}</small>`;
+  if(L.chain){const k=G.chainIdx%4;html+=`<div class="chain">${SEQ.map((s,i)=>`<span class="${i<k?'done':i===k?'next':''}">${s}</span>`).join('<span style="background:none;padding:0">←</span>')}</div>`}
+  $('#task').innerHTML=html;
+}
+function startLevel(i){
+  clearInterval(famTimer);
+  G.bgOnly=false;G.fx=[];G.lvl=i;G.hearts=3;G.got=0;G.mist=0;G.streak=0;G.items=[];G.spawnT=.6;G.chainIdx=0;G.funcQueue=[];G.card=null;G.queue=[];G.boxes={};G.rows=[];G.lane=1;G.laneX=W/2;G.breathMsg=0;G.fish=[];G.orgQueue=[];G.bubs=[];G.bmode='in';G.bcount=0;G.lungS=.5;G.lungT=.5;G.board=0;G.matchCol=0;G.ev=null;G.evQ=[];G.rq=[];G.ridNext=0;G.scQ=[];G.sel={};G.respNext=0;G.bossNext=0;G.bqc=null;
+  const L=LV(); if(L.func)nextFunc(); if(L.type==='fish')nextOrg(); if(L.type==='dive')initDive(); if(L.type==='voyage')initVoyage();
+  const CC=$('#choiceCtrl'); CC.innerHTML=''; CC.classList.toggle('on',L.type==='voyage'||L.type==='crew'); CC.classList.toggle('four',L.type==='crew');
+  if(L.type==='voyage')[['art','🔴 الشريان','#d63031'],['cap','🔄 الشعيرات الدموية','#8e6b3a'],['vein','🔵 الوريد','#2962c9']].forEach(([c,t,col])=>{const b=document.createElement('button');b.textContent=t;b.style.background=col;b.onclick=()=>vChoose(c);CC.appendChild(b)});
+  if(L.type==='race'){CC.classList.add('on');const b=document.createElement('button');b.textContent='🚣 جدّف!';b.style.background='linear-gradient(180deg,#ff7b6b,#d63031)';b.style.flex='1 1 80%';b.style.maxWidth='520px';b.style.minHeight='66px';b.style.fontSize='26px';
+    b.addEventListener('pointerdown',e=>{e.preventDefault();raceTap()});CC.appendChild(b);initRace();}
+  if(L.type==='respond')nextScen();
+  if(L.type==='boss')initBoss();
+  if(L.type==='crew')[['red','#c0392b'],['white','#7f8c8d'],['plt','#d4a017'],['plasma','#1f8a9e']].forEach(([c,col])=>{const b=document.createElement('button');b.textContent=`${CREW[c].e} ${CREW[c].n}`;b.style.background=col;b.onclick=()=>crewChoose(c);CC.appendChild(b)});
+  G.wall=ST().levels.slice(0,i).reduce((a,l)=>a+l.need,0);
+  setTask();updHud();
+  G.running=true;G.paused=false;$('#hud').classList.add('on');
+  $('#ctrl').classList.toggle('on',L.type==='catch'||L.type==='runner'); $('#sortCtrl').classList.toggle('on',L.type==='sort'); $('#fam').classList.toggle('on',L.type==='family'||L.type==='match'||L.type==='riddle');
+  if(L.type==='family')startPuzzle();
+  if(L.type==='match')startBoard();
+  if(L.type==='riddle')startRiddle();
+}
+function stopPlay(){G.running=false;clearInterval(famTimer);['#hud','#ctrl','#sortCtrl','#fam','#choiceCtrl'].forEach(s=>$(s).classList.remove('on'))}
+function levelDone(){
+  if(!G.running)return; G.paused=true;G.items=[];G.card=null;clearInterval(famTimer);
+  const s=G.mist===0?3:G.mist===1?2:1; G.stars[G.lvl]=Math.max(G.stars[G.lvl]||0,s); SFX.win();
+  for(let i=0;i<4;i++)setTimeout(()=>burst(Math.random()*W,H*.4,pick(['#ffd166','#38b6c9','#e6b67c','#fff']),18),i*150);
+  const stars=`<div class="stars">${[0,1,2].map(i=>`<span class="${i<s?'':'off'}">⭐</span>`).join('')}</div>`;
+  const N=ST().levels.length, nxt=G.lvl+1<N;
+  showModal(`<b>أحسنت يا ${G.name}!</b> أنهيت الجولة ${G.lvl+1} من ${N}. ${s===3?'بدون أي خطأ! 👏':''}${stars}`,
+    [{t:nxt?'الجولة التالية ⬅':'إلى تحدي النوخذة 🐚',f:()=>{hideModal();stopPlay();
+      if(nxt)story([ST().levels[G.lvl+1].intro],()=>startLevel(G.lvl+1)); else quiz();}},
+     {t:'🔁 أعد الجولة لتحصل على 3 نجوم',f:()=>{hideModal();startLevel(G.lvl)},sea:true,hide:s===3}]);
+}
+
+/* =================== QUIZ & ENDING =================== */
+function quiz(){
+  let i=0,score=0; const S=ST(); const qs=shuffle(S.quiz).slice(0,3);
+  story([S.quizIntro(G.name)],()=>{G.bgOnly=true;ask()});
+  function ask(){
+    const q=qs[i]; const opts=shuffle([q.a,...q.w]);
+    showModal(`<div style="font-weight:800;color:#8a5a2b">تحدي النوخذة — السؤال ${i+1} من 3</div><div style="margin-top:6px">${q.q}</div><div class="opts">${opts.map(o=>`<button class="opt">${o}</button>`).join('')}</div>`,[]);
+    let tries=0;
+    document.querySelectorAll('#modalTxt .opt').forEach(b=>b.onclick=()=>{
+      if(b.classList.contains('wrong')||b.dataset.done)return;
+      if(b.textContent===q.a){b.classList.add('right');SFX.ok();if(tries===0){score++;G.pearls+=3}else G.pearls+=1;
+        document.querySelectorAll('#modalTxt .opt').forEach(x=>x.dataset.done=1);
+        $('#modalExtra').innerHTML=`<p style="margin:10px 0 0;color:#3f9b4f;font-weight:700">✔ ${q.why}</p>`;
+        setBtns([{t:i<2?'السؤال التالي ⬅':S.quizDone,f:()=>{i++;if(i<3)ask();else{G.quizScore=score;hideModal();ending()}}}]);
+      }else{b.classList.add('wrong');tries++;SFX.bad();$('#modalExtra').innerHTML=`<p style="margin:10px 0 0;color:#d4543c;font-weight:700">فكّر جيدًا يا بحّار… حاول مرة أخرى 🤔</p>`}
+    });
+  }
+}
+function ending(){
+  G.bgOnly=false; SFX.win(); const S=ST();
+  const max=S.levels.length*3+3, total=G.stars.reduce((a,b)=>a+(b||0),0)+(G.quizScore||0);
+  const s=Math.max(1,Math.round(total/max*5));
+  SV.done[S.id]=true; SV.stars[S.id]=Math.max(SV.stars[S.id]||0,s); SV.pearls[S.id]=Math.max(SV.pearls[S.id]||0,G.pearls); save();
+  $('#certTitle').textContent=S.cert.title; $('#certText').innerHTML=S.cert.text; $('#certImg').src=SRC[S.cert.img];
+  $('#certName').textContent=G.name; $('#certAv').src=SRC[G.char]; $('#certPearls').textContent=G.pearls;
+  $('#certStars').innerHTML=[0,1,2,3,4].map(i=>`<span class="${i<s?'':'off'}">⭐</span>`).join('');
+  $('#certDate').textContent=new Date().toLocaleDateString('ar-KW',{year:'numeric',month:'long',day:'numeric'});
+  if(S.final){ const tot=Object.values(SV.pearls).reduce((a,b)=>a+b,0); $('#certText').innerHTML=S.cert.text+`<br>🦪 مجموع لؤلؤ الرحلة كلها: <b>${tot}</b>`; celebrate(); }
+  const nextName = S.final ? '🎉 مبروك! أنهيت رحلة الدانة كاملة! 🇰🇼' : STAGES[G.si+1]? `المرحلة ${G.si+2} «${STAGES[G.si+1].place}» انفتحت! 🔓` : (FUTURE[G.si+1-STAGES.length]?`⛵ المرحلة ${G.si+2} «${FUTURE[G.si+1-STAGES.length].place}» قريبًا…`:'');
+  $('#endHint').innerHTML=`📸 صوّر الشاشة لتحتفظ بشهادتك!<br>${nextName}`;
+  show('sEnd');
+}
+
+function celebrate(){ const box=document.createElement('div');box.className='confetti';
+  for(let i=0;i<36;i++){const sp=document.createElement('span');sp.textContent=pick(['✨','🦪','⭐','🎉','👑']);sp.style.left=(Math.random()*100)+'%';sp.style.animationDelay=(Math.random()*3)+'s';sp.style.fontSize=(18+Math.random()*18)+'px';box.appendChild(sp)}
+  $('#sEnd').appendChild(box); setTimeout(()=>box.remove(),9000); }
+/* =================== MAP =================== */
+function renderMap(){
+  $('#mapHello').innerHTML= SV.done[6]? `🏆 <b>${G.name}</b>، أنت صائد الدانة! أتممت الرحلة كاملة 👑` : `أهلًا يا <b>${G.name}</b>! اختر مرحلتك 👇`;
+  const tot=Object.values(SV.pearls).reduce((a,b)=>a+b,0); $('#mapPearls').textContent=`🦪 مجموع لؤلؤك: ${tot}`;
+  let html='', firstOpen=-1;
+  STAGES.forEach((S,i)=>{const un=unlocked(i),dn=SV.done[S.id];if(un&&!dn&&firstOpen<0)firstOpen=i;});
+  STAGES.forEach((S,i)=>{const un=unlocked(i),dn=SV.done[S.id];const st=SV.stars[S.id]||0;
+    html+=`<div class="node ${un?'':'lock'} ${i===firstOpen?'cur':''}" data-i="${i}"><div class="ic">${S.icon}</div><div class="tx"><b>المرحلة ${i+1}: ${S.place}</b><span>${S.lesson}</span></div>
+      <div class="st">${!un?'🔒':dn?'⭐'.repeat(Math.min(st,5)).slice(0,10)||'✅':'▶️ العب'}</div></div>`});
+  FUTURE.forEach((f,j)=>{html+=`<div class="node lock"><div class="ic">${f.icon}</div><div class="tx"><b>المرحلة ${STAGES.length+j+1}: ${f.place}</b><span>${f.lesson}</span></div><div class="st">قريبًا ⏳</div></div>`});
+  $('#nodes').innerHTML=html;
+  document.querySelectorAll('.node[data-i]').forEach(n=>n.onclick=()=>{const i=+n.dataset.i;SFX.click();
+    if(!unlocked(i)){showModal(`🔒 أكمل <b>المرحلة ${i}</b> أولًا لتفتح هذه المرحلة!`,[{t:'حسنًا',f:hideModal}]);return}
+    playStage(i)});
+  $('#teacherBtn').textContent=SV.unlockAll?'🔒 للمعلمة: إعادة قفل المراحل':'🔑 للمعلمة: فتح جميع المراحل';
+  show('sMap');
+}
+function playStage(i){
+  G.si=i;G.pearls=0;G.stars=[];G.quizScore=0;
+  G.wallTotal=STAGES[i].levels.reduce((a,l)=>a+l.need,0);
+  $('#storyBg').style.backgroundImage=`url(${SRC[STAGES[i].bg]})`;
+  story([...STAGES[i].intro(G.name), STAGES[i].levels[0].intro],()=>startLevel(0));
+}
+
+/* =================== LOOP =================== */
+let last=0;
+function loop(ts){
+  const dt=Math.min(.05,(ts-last)/1000||0); last=ts;
+  if(G.running&&!G.paused){G.t+=dt;G.shake=Math.max(0,G.shake-dt*20);const L=LV(); if(L.type==='catch')updateCatch(dt); else if(L.type==='sort')updateSort(dt); else if(L.type==='runner')updateRunner(dt); else if(L.type==='fish')updateFish(dt); else if(L.type==='dive')updateDive(dt); else if(L.type==='bubble')updateBubble(dt); else if(L.type==='voyage')updateVoyage(dt); else if(L.type==='crew')updateCrew(dt); else if(L.type==='race')updateRace(dt); else if(L.type==='respond')updateRespond(dt); else if(L.type==='boss')updateBoss(dt);}
+  cx.clearRect(0,0,W,H);
+  if(G.bgOnly&&!G.running)drawBg();
+  if(G.running){drawBg(); const L=LV();
+    if(L.type==='catch'){if(ST().wall)drawWall();G.items.forEach(drawBrick);drawChar()}
+    else if(L.type==='sort')drawSort();
+    else if(L.type==='runner')drawRunner();
+    else if(L.type==='fish')drawFish();
+    else if(L.type==='dive')drawDive();
+    else if(L.type==='bubble')drawBubble();
+    else if(L.type==='voyage')drawVoyage();
+    else if(L.type==='crew')drawCrew();
+    else if(L.type==='race')drawRace();
+    else if(L.type==='respond')drawRespond();
+    else if(L.type==='boss')drawBoss();
+    drawFx(G.paused?0:dt);}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* =================== UI HELPERS =================== */
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
+function story(pages,done){ let k=0; show('sStory'); const t=$('#storyTxt'),nb=$('#storyNext');
+  const draw=()=>{t.innerHTML=pages[k];nb.textContent=k<pages.length-1?'التالي ⬅':'هيا نبدأ! ⛵'}; draw();
+  nb.onclick=()=>{SFX.click();k++;if(k<pages.length)draw();else{show('');done()}} }
+function setBtns(btns){const box=$('#modalBtns');box.innerHTML='';btns.filter(b=>!b.hide).forEach(b=>{const e=document.createElement('button');e.className='btn small'+(b.sea?' sea':'');e.innerHTML=b.t;e.onclick=()=>{SFX.click();b.f()};box.appendChild(e)})}
+function showModal(html,btns,extra=''){ $('#modalTxt').innerHTML=html; $('#modalExtra').innerHTML=extra?`<p style="margin:8px 0 0;font-weight:700;color:#1f8a9e">${extra}</p>`:''; setBtns(btns); $('#modal').classList.add('on') }
+function hideModal(){ $('#modal').classList.remove('on') }
+
+/* =================== INPUT =================== */
+let ptr=null;
+cv.addEventListener('pointerdown',e=>{if(!G.running)return; const L=LV();
+  if(L.type==='catch'){G.targetX=e.clientX/W;cv.setPointerCapture(e.pointerId)}
+  if(L.type==='sort'||L.type==='runner'){ptr={x:e.clientX,y:e.clientY}}
+  if(L.type==='fish'&&!G.paused)tapFish(e.clientX,e.clientY);
+  if(L.type==='bubble'&&!G.paused)tapBubble(e.clientX,e.clientY);
+  if(L.type==='race')raceTap();
+  if(L.type==='dive'){G.dv.tx=e.clientX;G.dv.ty=e.clientY;cv.setPointerCapture(e.pointerId)}});
+cv.addEventListener('pointermove',e=>{if(!G.running)return; const T=LV().type; if(T==='catch'&&(e.buttons||e.pointerType==='mouse'))G.targetX=e.clientX/W; if(T==='dive'&&e.buttons){G.dv.tx=e.clientX;G.dv.ty=e.clientY}});
+cv.addEventListener('pointerup',e=>{if(!G.running||!ptr)return; const T=LV().type; const dx=e.clientX-ptr.x; ptr=null;
+  if(T==='runner'){ if(Math.abs(dx)>30)moveLane(dx>0?1:-1); else { const t=[0,1,2].reduce((b,i)=>Math.abs(laneX(i)-e.clientX)<Math.abs(laneX(b)-e.clientX)?i:b,0); if(t!==G.lane&&!G.paused&&G.running){G.lane=t;SFX.click()} } return }
+  if(T!=='sort')return;
+  if(Math.abs(dx)>30)decide(dx>0?'R':'L'); else decide(e.clientX>W/2?'R':'L');});
+addEventListener('keydown',e=>{ if(!G.running)return; const L=LV();
+  if(e.key==='ArrowLeft'){e.preventDefault(); if(L.type==='sort')decide('L'); else if(L.type==='runner')moveLane(-1); else G.keys.left=1}
+  if(e.key==='ArrowRight'){e.preventDefault(); if(L.type==='sort')decide('R'); else if(L.type==='runner')moveLane(1); else G.keys.right=1}
+  if(L.type==='dive'){if(e.key==='ArrowUp'){e.preventDefault();G.keys.up=1}if(e.key==='ArrowDown'){e.preventDefault();G.keys.down=1}}
+  if(L.type==='race'&&(e.key===' '||e.key==='Enter')){e.preventDefault();raceTap();return}
+  if(e.key===' '||e.key==='p')togglePause()});
+addEventListener('keyup',e=>{if(e.key==='ArrowLeft')G.keys.left=0;if(e.key==='ArrowRight')G.keys.right=0;if(e.key==='ArrowUp')G.keys.up=0;if(e.key==='ArrowDown')G.keys.down=0});
+const hold=(btn,key)=>{const on=e=>{e.preventDefault(); if(G.running&&LV().type==='runner'){moveLane(key==='left'?-1:1);return} G.keys[key]=1},off=()=>G.keys[key]=0;btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointerleave',off);btn.addEventListener('pointercancel',off)};
+hold($('#bL'),'left');hold($('#bR'),'right');
+$('#sR').onclick=()=>decide('R'); $('#sL').onclick=()=>decide('L');
+function togglePause(){ if(!G.running||$('#modal').classList.contains('on'))return;
+  G.paused=true;showModal('⏸️ استراحة قصيرة… البحر ينتظرك!',[{t:'أكمل ⛵',f:()=>{hideModal();G.paused=false}}]) }
+$('#pauseBtn').onclick=togglePause;
+$('#muteBtn').onclick=()=>{G.muted=!G.muted;$('#muteBtn').textContent=G.muted?'🔇':'🎵';$('#muteBtn').classList.toggle('off',G.muted);music(!G.muted)};
+document.addEventListener('visibilitychange',()=>{ if(document.hidden)BGM.pause(); else if(!G.muted&&G.musicStarted)music(true) });
+
+/* =================== FLOW =================== */
+$('#goStart').onclick=()=>{ac();SFX.click();G.musicStarted=true;music(true);
+  if(SV.name&&SV.char){G.name=SV.name;G.char=SV.char;renderMap()} else openChar()};
+function openChar(){ $('#nameIn').value=G.name||''; document.querySelectorAll('.char').forEach(x=>x.classList.toggle('sel',x.dataset.c===G.char)); chk(); show('sChar') }
+document.querySelectorAll('.char').forEach(c=>c.onclick=()=>{SFX.click();document.querySelectorAll('.char').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');G.char=c.dataset.c;chk()});
+$('#nameIn').oninput=chk;
+function chk(){$('#goMap').disabled=!(G.char&&$('#nameIn').value.trim())}
+$('#goMap').onclick=()=>{G.name=$('#nameIn').value.trim();SV.name=G.name;SV.char=G.char;save();SFX.click();renderMap()};
+$('#changeChar').onclick=()=>{SFX.click();openChar()};
+$('#teacherBtn').onclick=()=>{SV.unlockAll=!SV.unlockAll;save();renderMap()};
+$('#toMapBtn').onclick=()=>{SFX.click();renderMap()};
+$('#againBtn').onclick=()=>{SFX.click();playStage(G.si)};
+
+})();
+</script>
+</body>
+</html>
